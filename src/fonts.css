@@ -1,0 +1,14 @@
+@font-face {
+  font-family: "Unnamed";
+  src: url("../static/fonts/Heming-Variable/Unnamed.ttf");
+}
+
+@font-face {
+  font-family: "Junicode";
+  src: url("../static/fonts/Junicode/Junicode.ttf");
+}
+
+@font-face {
+  font-family: "Junicode Bold Italic";
+  src: url("../static/fonts/Junicode/Junicode-BoldItalic.ttf");
+}
