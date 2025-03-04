@@ -162,7 +162,7 @@ export class FirstPersonCameraControl {
   }
 
   /**
-   * @description: update current calcuate each frame.
+   * @description: update current calculated each frame. Normalized for different FPS's
    */
   update() {
     //gravity test
