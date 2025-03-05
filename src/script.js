@@ -7,11 +7,101 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { ShaderPass } from "three/examples/jsm/Addons.js";
+import { CopyShader } from "three/examples/jsm/Addons.js";
+
 import Stats from "stats.js";
 
 /**
  * Base
  */
+
+// these selectors below are just for the landing page quality selection and enter button.====================
+let selectedQuality = "high";
+
+// identifying quality choices
+document.querySelectorAll(".quality-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    selectedQuality = btn.dataset.quality;
+    document
+      .querySelectorAll(".quality-btn")
+      .forEach((b) => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    document.getElementById("enterButton").disabled = false;
+  });
+});
+
+// Get quality settings
+const getQualitySettings = () => {
+  switch (selectedQuality) {
+    case "low":
+      return {
+        pixelRatio: 0.7,
+        antialias: false,
+        shadows: false,
+        shadowRes: 512,
+        applyDegradation: false,
+        noiseIntensity: 0.2,
+      };
+
+    case "high":
+      return {
+        pixelRatio: Math.min(window.devicePixelRatio, 2),
+        antialias: true,
+        shadows: true,
+        shadowRes: 512,
+        applyDegradation: false,
+        noiseIntensity: 0.02,
+      };
+  }
+};
+// until here ====================
+
+/**
+ * SHADERS
+ */
+
+const degradationShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    time: { value: 0 },
+    noiseIntensity: { value: 0.03 },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float time;
+    uniform float noiseIntensity;
+    
+    varying vec2 vUv;
+    
+    float random(vec2 st) {
+      return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+    }
+    
+    void main() {
+      vec4 color = texture2D(tDiffuse, vUv);
+      
+      // Signed noise in [-0.5, 0.5] range
+      float noise = (random(vUv + time) - 0.5) * 2.0 * noiseIntensity;
+      
+      // Preserve luminance while adding noise
+      float luminance = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
+      color.rgb += noise * mix(1.0, luminance, 0.5);
+      
+      // Maintain original brightness
+      color.rgb = mix(color.rgb, color.rgb * (1.0 + noise), 0.2);
+      
+      gl_FragColor = color;
+    }
+  `,
+};
 
 // Raycasting variables for HTML Elements interaction
 let foundIntersectionPrateleira = false;
@@ -59,8 +149,9 @@ raycaster.params.Line = { threshold: 100 };
 /**
  * Lights
  */
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-// scene.add(ambientLight);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+
+scene.add(ambientLight);
 
 /**
  * Directional light
@@ -91,15 +182,6 @@ const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
 };
-
-window.addEventListener("resize", onWindowResize, false);
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
 
 /**
  * Camera
@@ -138,6 +220,10 @@ gltfLoader.setDRACOLoader(dracoLoader);
 
 let sceneInitialized = false;
 
+// ENTER BUTTON CLICK HANDLER
+let renderer;
+let effectComposer;
+
 document.getElementById("enterButton").addEventListener("click", () => {
   // Hide landing page
   document.querySelector(".landing-page").style.display = "none";
@@ -146,6 +232,55 @@ document.getElementById("enterButton").addEventListener("click", () => {
   const loadingScreen = document.querySelector(".loading-screen");
   loadingScreen.style.display = "flex";
   loadingScreen.classList.remove("fade-out");
+
+  /**
+   * Renderer
+   */
+  const settings = getQualitySettings();
+  renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: settings.antialias,
+  });
+
+  // console.log(settings);
+  renderer.shadowMap.enabled = settings.shadows;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(settings.pixelRatio);
+  renderer.setSize(sizes.width, sizes.height);
+
+  // renderer.shadowMap.enabled = true;
+  // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // renderer.physicallyCorrectLights = true;
+
+  // renderer.setSize(sizes.width, sizes.height);
+  // renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1;
+
+  /**
+   * Post processing
+   */
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  effectComposer = new EffectComposer(renderer);
+  effectComposer.setSize(sizes.width, sizes.height);
+  effectComposer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const renderPass = new RenderPass(scene, camera);
+  effectComposer.addPass(renderPass);
+
+  if (settings.applyDegradation) {
+    const degradationPass = new ShaderPass(degradationShader);
+    degradationPass.uniforms["noiseIntensity"].value = settings.noiseIntensity;
+    effectComposer.addPass(degradationPass);
+
+    // Add copy pass to finalize
+    effectComposer.addPass(new ShaderPass(CopyShader));
+  }
 
   if (!sceneInitialized) {
     sceneInitialized = true;
@@ -163,39 +298,24 @@ document.getElementById("enterButton").addEventListener("click", () => {
   }
 });
 
-/**
- * Renderer
- */
-const renderer = new THREE.WebGLRenderer({
-  canvas: canvas,
-  antialias: true,
-});
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+// handle resizes
+window.addEventListener("resize", onWindowResize, false);
 
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.physicallyCorrectLights = true;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1;
+function onWindowResize() {
+  const settings = getQualitySettings();
 
-/**
- * Post processing
- */
+  sizes.width = window.innerWidth;
+  sizes.height = window.innerHeight;
 
-const width = window.innerWidth;
-const height = window.innerHeight;
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
 
-const effectComposer = new EffectComposer(renderer);
-effectComposer.setSize(sizes.width, sizes.height);
-effectComposer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(sizes.width, sizes.height);
+  renderer.setPixelRatio(settings.pixelRatio);
 
-const renderPass = new RenderPass(scene, camera);
-effectComposer.addPass(renderPass);
-
-// GUI
-//
+  effectComposer.setSize(sizes.width, sizes.height);
+  effectComposer.setPixelRatio(settings.pixelRatio);
+}
 
 /**
  * Animate
@@ -215,6 +335,14 @@ const tick = () => {
     window.requestAnimationFrame(tick);
     stats.end();
     return;
+  }
+
+  if (effectComposer && getQualitySettings().applyDegradation) {
+    effectComposer.passes.forEach((pass) => {
+      if (pass.uniforms && pass.uniforms["time"]) {
+        pass.uniforms["time"].value = elapsedTime;
+      }
+    });
   }
 
   // first person controls
