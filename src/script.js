@@ -33,12 +33,10 @@ const loadingManager = new THREE.LoadingManager(() => {
   loadingScreen.classList.add("fade-out");
 
   // optional: remove loader from DOM via event listener
-  loadingScreen.addEventListener("transitionend", onTransitionEnd);
+  loadingScreen.addEventListener("transitionend", (event) => {
+    event.target.remove();
+  });
 });
-
-function onTransitionEnd(event) {
-  event.target.remove();
-}
 
 // Debug
 const gui = new GUI();
@@ -48,26 +46,6 @@ const canvas = document.querySelector(".webgl");
 
 // Scene
 const scene = new THREE.Scene();
-
-/**
- * Models
- */
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath("/draco/");
-
-const gltfLoader = new GLTFLoader(loadingManager);
-gltfLoader.setDRACOLoader(dracoLoader);
-
-gltfLoader.load("./my studio final.glb", (gltf) => {
-  gltf.scene.scale.set(0.1, 0.1, 0.1);
-  gltf.scene.position.set(0, 0, 0);
-
-  const loadedModel = gltf.scene;
-
-  scene.add(loadedModel);
-  console.log(loadedModel);
-  fpControls.colliders = gltf.scene.children[0];
-});
 
 /**
  * Raycaster
@@ -144,8 +122,46 @@ scene.add(camera);
 const orbit = new OrbitControls(camera, canvas);
 orbit.enabled = false;
 
+// Fisrt Person Camera
+
 const fpControls = new FirstPersonCameraControl(camera, canvas);
-fpControls.enabled = true;
+fpControls.enabled = false;
+
+/**
+ * Models
+ */
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("/draco/");
+
+const gltfLoader = new GLTFLoader(loadingManager);
+gltfLoader.setDRACOLoader(dracoLoader);
+
+let sceneInitialized = false;
+
+document.getElementById("enterButton").addEventListener("click", () => {
+  // Hide landing page
+  document.querySelector(".landing-page").style.display = "none";
+
+  // Show loading screen
+  const loadingScreen = document.querySelector(".loading-screen");
+  loadingScreen.style.display = "flex";
+  loadingScreen.classList.remove("fade-out");
+
+  if (!sceneInitialized) {
+    sceneInitialized = true;
+
+    // Start loading the model
+
+    gltfLoader.load("./my studio final.glb", (gltf) => {
+      gltf.scene.scale.set(0.1, 0.1, 0.1);
+      gltf.scene.position.set(0, 0, 0);
+      scene.add(gltf.scene);
+      fpControls.colliders = gltf.scene.children[0];
+    });
+
+    fpControls.enabled = true;
+  }
+});
 
 /**
  * Renderer
@@ -193,6 +209,13 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
   const deltaTime = elapsedTime - previousTime;
   previousTime = elapsedTime;
+
+  // pause while loading
+  if (!sceneInitialized) {
+    window.requestAnimationFrame(tick);
+    stats.end();
+    return;
+  }
 
   // first person controls
   fpControls.update();
