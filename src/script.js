@@ -149,9 +149,9 @@ raycaster.params.Line = { threshold: 100 };
 /**
  * Lights
  */
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+// const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 
-scene.add(ambientLight);
+// scene.add(ambientLight);
 
 /**
  * Directional light
@@ -287,8 +287,8 @@ document.getElementById("enterButton").addEventListener("click", () => {
 
     // Start loading the model
 
-    gltfLoader.load("./my studio final.glb", (gltf) => {
-      gltf.scene.scale.set(0.1, 0.1, 0.1);
+    gltfLoader.load("./ROOM OMR NEW.glb", (gltf) => {
+      gltf.scene.scale.set(0.3, 0.3, 0.3);
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
       fpControls.colliders = gltf.scene.children[0];
@@ -363,7 +363,12 @@ const tick = () => {
   foundIntersectionVinil = false;
 
   intersects.forEach((intersect) => {
-    if (intersect.object.name.includes("prateleira_cima")) {
+    if (
+      intersect.object.name.includes("prateleira_cima") ||
+      intersect.object.name.includes("lateral_direita") ||
+      intersect.object.name.includes("lateral_esquerda") ||
+      intersect.object.name.includes("ESTANTE_2_EMPT")
+    ) {
       foundIntersectionPrateleira = true;
     }
     if (intersect.object.name.includes("MIXER_e_vinil")) {
