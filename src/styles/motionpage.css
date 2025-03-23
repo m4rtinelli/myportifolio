@@ -130,8 +130,8 @@ body {
 
 @media (max-width: 500px) {
   .header-motion-container {
-    gap: 50px;
-    font-size: 20px;
+    gap: 20px;
+    font-size: 18px;
   }
   .gallery-wrapper-others,
   .gallery-wrapper {
