@@ -6,6 +6,10 @@ body {
   background-color: black;
 }
 
+.nv {
+  visibility: hidden;
+}
+
 #header-motion {
   background-color: black;
   padding: 30px 30px;
@@ -54,10 +58,42 @@ body {
   gap: 32px;
   justify-content: center;
 }
+.gallery-item {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-content: center;
+}
 
 .video-gallery {
   max-width: 100%;
   height: auto;
+  transition: all 0.5s cubic-bezier(0.34, 0.15, 0.18, 1);
+  overflow: hidden;
+}
+
+.video-gallery:hover {
+  filter: blur(10px);
+}
+
+.hover-overlay {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+  font-family: "Arial";
+  font-size: 22px;
+  color: white;
+  transform: translateX(-100px);
+  opacity: 0;
+  transition: all 0.5s ease;
+}
+
+.hover-overlay.animate {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .header-selected {
@@ -83,4 +119,22 @@ body {
 
 .hidden {
   display: none;
+}
+
+@media (max-width: 1200px) {
+  .gallery-wrapper-others,
+  .gallery-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .header-motion-container {
+    gap: 50px;
+    font-size: 20px;
+  }
+  .gallery-wrapper-others,
+  .gallery-wrapper {
+    grid-template-columns: repeat(1, 1fr);
+  }
 }

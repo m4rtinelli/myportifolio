@@ -4,6 +4,9 @@ const othersButton = document.getElementById("others");
 const galleryWrapperOMR = document.querySelector(".gallery-wrapper");
 const galleryWrapperOthers = document.querySelector(".gallery-wrapper-others");
 
+const hoverOverlay = document.querySelectorAll(".hover-overlay");
+const galleryWrapper = document.querySelectorAll(".gallery-item");
+
 omrButton.addEventListener("click", function () {
   // Atualiza as classes dos botões (opcional, se quiser manter o visual de seleção)
   omrButton.classList.add("header-selected");
@@ -32,4 +35,22 @@ othersButton.addEventListener("click", function () {
   galleryWrapperOthers.classList.remove("animate-grow");
   void galleryWrapperOthers.offsetWidth; // Força o reflow
   galleryWrapperOthers.classList.add("animate-grow");
+});
+
+galleryWrapper.forEach((item) => {
+  item.addEventListener("mouseenter", function () {
+    const overlay = item.querySelector(".hover-overlay");
+    if (overlay) {
+      overlay.classList.remove("nv");
+      overlay.classList.add("animate");
+    }
+  });
+
+  item.addEventListener("mouseleave", function () {
+    const overlay = item.querySelector(".hover-overlay");
+    if (overlay) {
+      overlay.classList.add("nv");
+      overlay.classList.remove("animate");
+    }
+  });
 });
