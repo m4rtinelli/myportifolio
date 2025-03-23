@@ -1,0 +1,86 @@
+@import url("./reset.css");
+@import url("../fonts.css");
+
+body {
+  overflow-x: hidden;
+  background-color: black;
+}
+
+#header-motion {
+  background-color: black;
+  padding: 30px 30px;
+  width: 100%;
+}
+
+.header-motion-container {
+  color: white;
+  display: flex;
+  gap: 250px;
+  font-family: "Arial";
+  font-size: 32px;
+}
+
+.header-motion-container li {
+  cursor: pointer;
+}
+
+.gallery-motion {
+  width: 100%;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overflow-x: hidden;
+}
+
+.gallery-wrapper {
+  background-color: transparent;
+  color: white;
+  padding: 0px 30px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  gap: 32px;
+  justify-content: center;
+}
+
+.gallery-wrapper-others {
+  background-color: transparent;
+  color: white;
+  padding: 0px 30px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  gap: 32px;
+  justify-content: center;
+}
+
+.video-gallery {
+  max-width: 100%;
+  height: auto;
+}
+
+.header-selected {
+  text-decoration: underline;
+}
+
+@keyframes growDown {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* Classe que aplica a animação */
+.animate-grow {
+  animation: growDown 0.5s ease forwards;
+  transform-origin: top;
+}
+
+.hidden {
+  display: none;
+}

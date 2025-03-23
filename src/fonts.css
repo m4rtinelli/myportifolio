@@ -1,24 +1,24 @@
 @font-face {
   font-family: "Unnamed";
-  src: url("../static/fonts/Heming-Variable/Unnamed.ttf");
+  src: url("../fonts/Heming-Variable/Unnamed.ttf");
 }
 
 @font-face {
   font-family: "Junicode";
-  src: url("../static/fonts/Junicode/Junicode.ttf");
+  src: url("../fonts/Junicode/Junicode.ttf");
 }
 
 @font-face {
   font-family: "Junicode Bold Italic";
-  src: url("../static/fonts/Junicode/Junicode-BoldItalic.ttf");
+  src: url("../fonts/Junicode/Junicode-BoldItalic.ttf");
 }
 
 @font-face {
   font-family: "OT Neue Montreal Book Semi Squeezed";
-  src: url("../static/fonts/OT-Neue-Montreal/OTNEUEMONTREAL-BOOKSEMISQUEEZED.OTF");
+  src: url("../fonts/OT-Neue-Montreal/OTNEUEMONTREAL-BOOKSEMISQUEEZED.OTF");
 }
 
 @font-face {
   font-family: "Zhirok Typeface";
-  src: url("../static/fonts/Zhirok/ZHIROK-TYPEFACE.OTF");
+  src: url("../fonts/Zhirok/ZHIROK-TYPEFACE.OTF");
 }
