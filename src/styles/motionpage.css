@@ -136,6 +136,10 @@ body {
     gap: 20px;
     font-size: 18px;
   }
+
+  .video-gallery:hover {
+    filter: blur(0px);
+  }
   .gallery-wrapper-others,
   .gallery-wrapper {
     grid-template-columns: repeat(1, 1fr);
