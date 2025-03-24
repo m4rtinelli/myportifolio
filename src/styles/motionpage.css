@@ -107,12 +107,12 @@ body {
 }
 
 .footer-motion {
+  max-width: 100dvw;
   margin-top: 100px;
-  width: 100%;
   padding: 30px 30px;
   border-top: 1px solid white;
   display: flex;
-  justify-content: center;
+  justify-content: end;
 }
 
 .footer-motion a {
