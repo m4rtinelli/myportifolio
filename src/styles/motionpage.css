@@ -64,6 +64,7 @@ body {
 .gallery-item {
   position: relative;
   height: 100%;
+  max-height: 500px;
   display: flex;
   align-content: center;
 }
@@ -89,6 +90,7 @@ body {
   font-family: "Arial";
   font-size: 22px;
   color: white;
+  mix-blend-mode: difference;
   transform: translateX(-100px);
   opacity: 0;
   transition: all 0.5s ease;
@@ -143,5 +145,14 @@ body {
   .gallery-wrapper-others,
   .gallery-wrapper {
     grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  video::-webkit-media-controls {
+    display: none !important;
+  }
+  video::-webkit-media-controls-enclosure {
+    display: none !important;
   }
 }
