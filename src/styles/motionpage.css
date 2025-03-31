@@ -165,11 +165,11 @@ body {
   }
 }
 
-@media (min-width: 768px) {
+/* @media (min-width: 768px) {
   video::-webkit-media-controls {
     display: none !important;
   }
   video::-webkit-media-controls-enclosure {
     display: none !important;
   }
-}
+} */
