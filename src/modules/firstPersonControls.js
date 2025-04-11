@@ -22,7 +22,7 @@ export class FirstPersonCameraControl {
     this.positionEasing = true;
     this.lookflag = 1;
     this.lookSpeed = 0.008;
-    this.moveSpeed = 0.02;
+    this.moveSpeed = 0.03;
     this.playerHeight = 1.7;
     this.g = 1;
     // event bindings
@@ -164,13 +164,14 @@ export class FirstPersonCameraControl {
   /**
    * @description: update current calculated each frame. Normalized for different FPS's
    */
-  update() {
+  update(deltaTime) {
     //gravity test
-    this.gravityTest();
-    //collision test
-    this.collisionTest();
-  }
 
+    this.gravityTest(deltaTime);
+    //collision test
+    this.collisionTest(deltaTime);
+  }
+  
   gravityTest() {
     if (this.applyGravity && this._rayCastObjects) {
       let isFalling = true;
@@ -199,22 +200,22 @@ export class FirstPersonCameraControl {
         }
       }
 
-      if (isFalling) {
+      if (isFalling && deltaTime) {
         this.camera.position.y -= this.g * Math.pow(this._fallingTime, 2);
       }
     }
   }
 
-  collisionTest() {
-    if (this._camerLocalDirection.x !== 0) this.collisionTestX();
-    if (this._camerLocalDirection.z !== 0) this.collisionTestZ();
+  collisionTest(deltaTime) {
+    if (this._camerLocalDirection.x !== 0) this.collisionTestX(deltaTime);
+    if (this._camerLocalDirection.z !== 0) this.collisionTestZ(deltaTime);
   }
 
-  collisionTestX() {
+  collisionTestX(deltaTime) {
     this._tmpVector.setFromMatrixColumn(this.camera.matrix, 0);
     this._tmpVector.multiplyScalar(this._camerLocalDirection.x);
     if (this.applyCollision) {
-      const intersect = this.hitTest();
+      const intersect = this.hitTest()
       if (intersect && intersect.distance < 0.3) {
         return;
       }
@@ -222,12 +223,12 @@ export class FirstPersonCameraControl {
 
     this.camera.position.addScaledVector(this._tmpVector, this.moveSpeed);
   }
-
-  collisionTestZ() {
+  collisionTestZ(deltaTime) {
     this._tmpVector.setFromMatrixColumn(this.camera.matrix, 0);
     this._tmpVector.crossVectors(this.camera.up, this._tmpVector);
     this._tmpVector.multiplyScalar(this._camerLocalDirection.z);
-    if (this.applyCollision) {
+
+    if (this.applyCollision ) {
       const intersect = this.hitTest();
       if (intersect && intersect.distance < 0.3) {
         return;
@@ -235,6 +236,7 @@ export class FirstPersonCameraControl {
     }
 
     this.camera.position.addScaledVector(this._tmpVector, this.moveSpeed);
+    
   }
 
   hitTest() {
