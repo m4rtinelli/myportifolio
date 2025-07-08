@@ -194,7 +194,7 @@ const camera = new THREE.PerspectiveCamera(
   100
 );
 camera.position.set(1, 6, 1);
-camera.lookAt(new THREE.Vector3(0, 0, 0));
+camera.lookAt(3, 1.5, 3);
 scene.add(camera);
 
 //**
@@ -242,7 +242,6 @@ document.getElementById("enterButton").addEventListener("click", () => {
     antialias: settings.antialias,
   });
 
-  // console.log(settings);
   renderer.shadowMap.enabled = settings.shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setPixelRatio(settings.pixelRatio);
@@ -292,6 +291,7 @@ document.getElementById("enterButton").addEventListener("click", () => {
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);
       fpControls.colliders = gltf.scene.children[0];
+      camera.lookAt(3, 1.5, 3);
     });
 
     fpControls.enabled = true;
@@ -346,7 +346,7 @@ const tick = () => {
   }
 
   // first person controls
-  fpControls.update();
+  fpControls.update(deltaTime);
 
   // raycaster
   raycaster.ray.origin.copy(camera.position);
