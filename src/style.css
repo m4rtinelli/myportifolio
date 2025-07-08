@@ -139,6 +139,7 @@ p {
   padding: 0 20px 80px 20px;
   width: 100%;
   max-width: 800px;
+  max-height: 600px;
 
   border-radius: 10px;
   visibility: hidden;
@@ -150,7 +151,7 @@ p {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-height: 600px;
+  max-height: 400px;
   overflow: auto;
   /* handle scrollbar */
   scrollbar-width: none; /* Firefox */

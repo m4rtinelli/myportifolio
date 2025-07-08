@@ -149,9 +149,9 @@ raycaster.params.Line = { threshold: 100 };
 /**
  * Lights
  */
-// const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+const ambientLight = new THREE.AmbientLight(0xffb919, 0.4);
 
-// scene.add(ambientLight);
+scene.add(ambientLight);
 
 /**
  * Directional light
