@@ -10,13 +10,25 @@ body {
   visibility: hidden;
 }
 
+header {
+  display: flex;
+  justify-content: space-between;
+}
+
+header a {
+  text-decoration: none;
+  color: white;
+  font-family: "Arial";
+  font-size: 32px;
+}
+
 #header-motion {
   background-color: black;
   padding: 30px 30px;
-  width: 100%;
 }
 
 .header-motion-container {
+  max-width: max-content;
   color: white;
   display: flex;
   gap: 250px;
@@ -26,6 +38,11 @@ body {
 
 .header-motion-container li {
   cursor: pointer;
+}
+
+.header-motion-container li a {
+  text-decoration: none;
+  color: white;
 }
 
 .gallery-motion {

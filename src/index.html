@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Martinelli</title>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./styles/landingFluid.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
@@ -13,209 +13,33 @@
 
 <body>
 
-
-    <!-- welome page -->
-    <div class="landing-page">
-        <div class="content">
-
-            <div class="landing-info">
-                <p>This is a gamified web portfolio that translates my art into a immersive experience, welcome and enjoy. </p>
-                <p class="second-p">To move around the room, use ‘WASD’ or the arrows on your keyboard.</p>
-                <p class="third-p">To look around, click and drag the mouse to the desired location.</p>
-            </div>
-
-
-
-            <div class="quality-options">
-                <span>please select your desired resolution:</span>
-                <div class="buttons-container">
-                    <span class="quality-btn" data-quality="low">low</span>
-                    <span class="quality-btn" data-quality="high">high</span>
-                </div>
-
-                <span id="enterButton">ENTER</span>
-            </div>
-
-
-
+    <nav>
+        <div class="logo">
+            <p>Henrique Martinelli</p>
         </div>
-    </div>
-
-    <!-- Music Modal -->
-    <div id="musicModal" class="modal">
-        <div class="modal-content">
-            <span class="close" data-modal="musicModal">&times;</span>
-            <h1 class="modal-title">My discography</h1>
-            <div class="album-limiter">
-
-                <div class="album-wrapper">
-                    <div class="album-content">
-                        <img src="./fotos/albums/nossas-historias.png" alt="album-cover">
-                        <div class="album-info">
-                            <span> <span class="info-sub">Title: </span>Marta - Nossas Histórias</span>
-
-                            <span><span class="info-sub">Year: </span>2025</span>
-
-                            <span><span class="info-sub">Style: </span>Beats, Instrumental, Hip Hop</span>
-                        </div>
-
-                    </div>
-                    <div class="purchase-button">
-                        <span>Purchase</span>
-                    </div>
-                </div>
-
-
-                <div class="album-wrapper">
-                    <div class="album-content">
-                        <img src="./fotos/albums/rawcuts.jpg" alt="album-cover">
-                        <div class="album-info">
-                            <span> <span class="info-sub">Title: </span>Martinelli - Raw Cuts</span>
-
-                            <span><span class="info-sub">Year: </span>2023</span>
-
-                            <span><span class="info-sub">Style: </span>Techno</span>
-                        </div>
-
-                    </div>
-                    <div class="purchase-button">
-                        <span>Purchase</span>
-                    </div>
-                </div>
-
-                <div class="album-wrapper">
-                    <div class="album-content">
-                        <img src="./fotos/albums/minha vida.jpg" alt="album-cover">
-                        <div class="album-info">
-                            <span> <span class="info-sub">Title: </span>Martinelli - Minha Vida</span>
-
-                            <span><span class="info-sub">Year: </span>2023</span>
-
-                            <span><span class="info-sub">Style: </span>Electro, Techno, Acid</span>
-                        </div>
-
-                    </div>
-                    <div class="purchase-button">
-                        <span>Purchase</span>
-                    </div>
-                </div>
-
-
-                <div class="album-wrapper">
-                    <div class="album-content">
-                        <img src="./fotos/albums/privatedealer.jpg" alt="album-cover">
-                        <div class="album-info">
-                            <span> <span class="info-sub">Title: </span>Martinelli - Private Dealer</span>
-
-                            <span><span class="info-sub">Year: </span>2022</span>
-
-                            <span><span class="info-sub">Style: </span>Electro, Detroit Techno, TechnoBass</span>
-                        </div>
-
-                    </div>
-                    <div class="purchase-button">
-                        <span>Purchase</span>
-                    </div>
-                </div>
-
-
-                <div class="album-wrapper">
-                    <div class="album-content">
-                        <img src="./fotos/albums/programmin.jpg" alt="album-cover">
-                        <div class="album-info">
-                            <span> <span class="info-sub">Title: </span>Martinelli - Programmin'</span>
-
-                            <span><span class="info-sub">Year: </span>2022</span>
-
-                            <span><span class="info-sub">Style: </span>Electro, Techno</span>
-                        </div>
-
-                    </div>
-                    <div class="purchase-button">
-                        <span>Purchase</span>
-                    </div>
-                </div>
-
-
-                <div class="album-wrapper">
-                    <div class="album-content">
-                        <img src="./fotos/albums/ducentesimo.jpg" alt="album-cover">
-                        <div class="album-info">
-                            <span> <span class="info-sub">Title: </span>Martinelli - Ducentésimo Dia</span>
-
-                            <span><span class="info-sub">Year: </span>2020</span>
-
-                            <span><span class="info-sub">Style: </span>Techno</span>
-                        </div>
-
-                    </div>
-                    <div class="purchase-button">
-                        <span>Purchase</span>
-                    </div>
-                </div>
-
-                <div class="album-wrapper">
-                    <div class="album-content">
-                        <img src="./fotos/albums/Talvez.jpg" alt="album-cover">
-                        <div class="album-info">
-                            <span> <span class="info-sub">Title: </span>Martinelli - Talvez Numa Segunda Vinda</span>
-
-                            <span><span class="info-sub">Year: </span>2019</span>
-
-                            <span><span class="info-sub">Style: </span>Electro, Ambient, Techno</span>
-                        </div>
-
-                    </div>
-                    <div class="purchase-button">
-                        <span>Purchase</span>
-                    </div>
-                </div>
-
-                <div class="album-wrapper">
-                    <div class="album-content">
-                        <img src="./fotos/albums/909.jpg" alt="album-cover">
-                        <div class="album-info">
-                            <span> <span class="info-sub">Title: </span>Martinelli - NINE O'NINE</span>
-
-                            <span><span class="info-sub">Year: </span>2019</span>
-
-                            <span><span class="info-sub">Style: </span>Acid Techno, Acid, Techno</span>
-                        </div>
-
-                    </div>
-                    <div class="purchase-button">
-                        <span>Purchase</span>
-                    </div>
-                </div>
-
-            </div>
-            <div class="down-arrow">
-                <img src="./fotos/arrow-down.svg" alt="arrow down icon">
-            </div>
+        <div class="nav-items">
+            <a href="index.html">Home</a>
+            <a href="./motiondesign/index.html">Motion Design</a>
+            <a href="experience.html">Experience</a>
+            <p id="infoBt">Info</p>
+            <p id="contactBt">Contact</p>
         </div>
-    </div>
+    </nav>
+    <section class="hero">
+        <div class="gradient-canvas"></div>
 
-    <div id="setsModal" class="modal">
-        <div class="modal-content">
-            <span class="close" data-modal="setsModal">x;</span>
-            <!-- conteúdo -->
+        <div class="hero-logo">
+            <p>Welcome!</p>
         </div>
-    </div>
 
-    <!-- Website Loader -->
-    <section class="loading-screen">
-        <div class="loader"></div>
+        <div class="hero-footer">
+            <p>2025</p>
+            <p>martinelli303@hotmail.com</p>
+        </div>
     </section>
+    <script type="module" src="./modules/shaders.js"></script>
+    <script type="module" src="./modules/fluidLanding.js"></script>
 
-    <!-- interact with different objects manipulated in JS -->
-    <div id="cds" class="interaction">
-        <span>Press F to hear my music</span>
-    </div>
-
-    <canvas class="webgl"></canvas>
-    <script type="module" src="./script.js"></script>
-
-    <script type="module" src="./modules/firstPersonControls.js"></script>
 
 </body>
 

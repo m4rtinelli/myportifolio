@@ -1,0 +1,91 @@
+@import url("https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap");
+
+@import url("../fonts.css");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Host Grotesk";
+}
+
+img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+p,
+a {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 450;
+}
+
+nav,
+.hero-footer {
+  position: absolute;
+  left: 0;
+  width: 100vw;
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+}
+
+.nav-items {
+  display: flex;
+  gap: 4rem;
+}
+
+.nav-items a {
+  text-decoration: none;
+  color: white;
+}
+
+nav .logo p {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.hero-footer {
+  bottom: 0;
+}
+
+section {
+  position: relative;
+  width: 100vw;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.hero-logo {
+  font-family: "Host Grotesk" !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.hero-logo p {
+  font-size: 120px;
+}
+
+.gradient-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 1000px) {
+  nav {
+    flex-direction: column;
+    gap: 2rem;
+  }
+}
