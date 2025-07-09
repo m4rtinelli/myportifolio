@@ -77,10 +77,6 @@ body {
   overflow: hidden;
 }
 
-.video-gallery:hover {
-  filter: blur(10px);
-}
-
 .hover-overlay {
   position: absolute;
   top: 0px;
@@ -156,9 +152,6 @@ body {
     font-size: 18px;
   }
 
-  .video-gallery:hover {
-    filter: blur(0px);
-  }
   .gallery-wrapper-others,
   .gallery-wrapper {
     grid-template-columns: repeat(1, 1fr);
