@@ -6,7 +6,7 @@ const config = {
   brushStrength: 1,
   distortionAmount: 2.5,
   fluidDecay: 0.98,
-  trailLength: 2,
+  trailLength: 3,
   stopDecay: 0.85,
   color1: "#ffffff",
   color2: "#ffffff",
