@@ -44,6 +44,21 @@ nav,
 
 .nav-items p {
   cursor: pointer;
+  mix-blend-mode: normal;
+  transition: mix-blend-mode ease-in-out 0.2s;
+}
+
+.nav-items p:hover {
+  mix-blend-mode: difference;
+}
+
+.nav-items a {
+  mix-blend-mode: normal;
+  transition: mix-blend-mode ease-in-out 0.2s;
+}
+
+.nav-items a:hover {
+  mix-blend-mode: difference;
 }
 
 .nav-items a,
@@ -74,12 +89,19 @@ section {
 }
 
 .hero-logo,
-.contact {
+.contact,
+.info {
   font-family: "Host Grotesk" !important;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .contact {

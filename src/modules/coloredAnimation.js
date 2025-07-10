@@ -14,7 +14,9 @@ function wrapLetters(el) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  const all = document.querySelectorAll("body *:not(nav):not(nav *)");
+  const all = document.querySelectorAll(
+    "body *:not(nav):not(nav *):not(.info *)"
+  );
   const textElements = [];
 
   all.forEach((el) => {

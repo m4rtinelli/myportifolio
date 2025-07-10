@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { vertexShader, fluidShader, displayShader } from "./shaders.js";
 
 const config = {
-  brushSize: 25.0,
-  brushStrength: 3,
+  brushSize: 12.0,
+  brushStrength: 2,
   distortionAmount: 3,
   fluidDecay: 0.98,
   trailLength: 4,

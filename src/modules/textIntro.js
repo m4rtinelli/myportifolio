@@ -18,34 +18,36 @@ if (welcomeElement) {
   }, 3000);
 }
 
+const sections = {
+  homeBt: document.querySelector(".hero-logo"),
+  contactBt: document.querySelector(".contact"),
+  infoBt: document.querySelector(".info"),
+};
+
 const navItems = document.querySelectorAll(".nav-items p");
-const homeBt = document.getElementById("homeBt");
-const heroLogo = document.querySelector(".hero-logo");
-const contactSct = document.querySelector(".contact");
+
+function fadeTransition(fromSection, toSection) {
+  if (!fromSection || !toSection || fromSection === toSection) return;
+
+  fromSection.classList.remove("fade-in");
+  fromSection.classList.add("fade-out");
+
+  fromSection.addEventListener("transitionend", function handler() {
+    fromSection.removeEventListener("transitionend", handler);
+
+    toSection.classList.remove("fade-out");
+    toSection.classList.add("fade-in");
+  });
+}
+
+let currentSection = sections.homeBt; // Começa com home
 
 navItems.forEach((item) => {
   item.addEventListener("click", () => {
-    if (item.getAttribute("id") === "contactBt") {
-      heroLogo.classList.remove("fade-in");
-      heroLogo.classList.add("fade-out");
+    const targetId = item.getAttribute("id");
+    const targetSection = sections[targetId];
 
-      heroLogo.addEventListener("transitionend", function handler() {
-        heroLogo.removeEventListener("transitionend", handler);
-
-        contactSct.classList.remove("fade-out");
-        contactSct.classList.add("fade-in");
-      });
-    }
-    if (item.getAttribute("id") === "homeBt") {
-      contactSct.classList.add("fade-out");
-      contactSct.classList.remove("fade-in");
-
-      contactSct.addEventListener("transitionend", function handler() {
-        contactSct.removeEventListener("transitionend", handler);
-
-        heroLogo.classList.remove("fade-out");
-        heroLogo.classList.add("fade-in");
-      });
-    }
+    fadeTransition(currentSection, targetSection);
+    currentSection = targetSection;
   });
 });
