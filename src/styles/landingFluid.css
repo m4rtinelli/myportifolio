@@ -42,7 +42,12 @@ nav,
   gap: 4rem;
 }
 
-.nav-items a {
+.nav-items p {
+  cursor: pointer;
+}
+
+.nav-items a,
+.contact a {
   text-decoration: none;
   color: white;
 }
@@ -56,6 +61,11 @@ nav .logo p {
   bottom: 0;
 }
 
+.hero-footer a {
+  text-decoration: none;
+  color: white;
+}
+
 section {
   position: relative;
   width: 100vw;
@@ -63,12 +73,30 @@ section {
   overflow: hidden;
 }
 
-.hero-logo {
+.hero-logo,
+.contact {
   font-family: "Host Grotesk" !important;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.contact {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.phone-insta {
+  display: flex;
+  justify-content: space-between;
+}
+
+.mail-hero-contact {
+  font-size: 3rem;
 }
 
 .hero-logo p {
@@ -81,6 +109,22 @@ section {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.dn {
+  display: none !important;
+}
+
+.fade-in {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
 @media (max-width: 1000px) {

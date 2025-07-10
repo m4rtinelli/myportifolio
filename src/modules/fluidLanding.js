@@ -3,10 +3,10 @@ import { vertexShader, fluidShader, displayShader } from "./shaders.js";
 
 const config = {
   brushSize: 25.0,
-  brushStrength: 1,
-  distortionAmount: 2.5,
+  brushStrength: 3,
+  distortionAmount: 3,
   fluidDecay: 0.98,
-  trailLength: 3,
+  trailLength: 4,
   stopDecay: 0.85,
   color1: "#ffffff",
   color2: "#ffffff",
@@ -121,6 +121,23 @@ document.addEventListener("mousemove", (e) => {
 
 document.addEventListener("mouseleave", () => {
   fluidMaterial.uniforms.iMouse.value.set(0, 0, 0, 0);
+});
+
+// change color based on menu
+document.querySelectorAll(".nav-items p").forEach((item) => {
+  item.addEventListener("click", () => {
+    const color1 = item.getAttribute("data-color1");
+    const color2 = item.getAttribute("data-color2");
+    const color3 = item.getAttribute("data-color3");
+    const color4 = item.getAttribute("data-color4");
+
+    if (color1 && color2 && color3 && color4) {
+      config.color1 = color1;
+      config.color2 = color2;
+      config.color3 = color3;
+      config.color4 = color4;
+    }
+  });
 });
 
 function animate() {
