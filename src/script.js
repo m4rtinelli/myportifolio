@@ -159,12 +159,12 @@ scene.add(ambientLight);
 
 // Environment Map
 const environmentMap = cubeTextureLoader.load([
-  "./hdri/Standard-Cube-Map/px.png",
-  "./hdri/Standard-Cube-Map/nx.png",
-  "./hdri/Standard-Cube-Map/py.png",
-  "./hdri/Standard-Cube-Map/ny.png",
-  "./hdri/Standard-Cube-Map/pz.png",
-  "./hdri/Standard-Cube-Map/nz.png",
+  "../hdri/Standard-Cube-Map/px.png",
+  "../hdri/Standard-Cube-Map/nx.png",
+  "../hdri/Standard-Cube-Map/py.png",
+  "../hdri/Standard-Cube-Map/ny.png",
+  "../hdri/Standard-Cube-Map/pz.png",
+  "../hdri/Standard-Cube-Map/nz.png",
 ]);
 
 // scene environment
@@ -286,7 +286,7 @@ document.getElementById("enterButton").addEventListener("click", () => {
 
     // Start loading the model
 
-    gltfLoader.load("./ROOM OMR NEW.glb", (gltf) => {
+    gltfLoader.load("../ROOM OMR NEW.glb", (gltf) => {
       gltf.scene.scale.set(0.3, 0.3, 0.3);
       gltf.scene.position.set(0, 0, 0);
       scene.add(gltf.scene);

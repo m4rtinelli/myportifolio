@@ -19,6 +19,7 @@ export default {
       input: {
         main: resolve(root, "index.html"),
         motiondesign: resolve(root, "motiondesign", "index.html"),
+        experience: resolve(root, "experience", "index.html"),
       },
     },
   },
