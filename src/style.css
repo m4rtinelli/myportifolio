@@ -1,4 +1,5 @@
 @import url("./fonts.css");
+@import url("https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap");
 
 body {
   margin: 0;
@@ -202,6 +203,35 @@ p {
   cursor: pointer;
 }
 
+/* Abas */
+.tab-button {
+  font-family: "Fira Code";
+  background-color: transparent;
+  border: 2px solid white;
+  color: white;
+  padding: 8px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Aba ativa */
+.tab-button.active {
+  background-color: white;
+  color: black;
+}
+
+/* Conteúdo de cada aba (por padrão escondido) */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: flex;
+  flex-direction: column;
+}
+/* /Abas */
+
 .modal-title {
   font-family: "Unnamed";
   font-size: 48px;
@@ -272,37 +302,7 @@ p {
   left: 0;
   width: 100%;
   height: 100%;
-  background: conic-gradient(
-    from 90deg at 50% 50%,
-    #253e57 0deg,
-    #e3f1ff 36deg,
-    #d7e5f4 39.6deg,
-    #bac9da 43.2deg,
-    #a3b3c6 46.8deg,
-    #93a4b8 54deg,
-    #899aaf 57.6deg,
-    #8798ad 68.4deg,
-    #ff0004 93.6deg,
-    #e3f1ff 129.6deg,
-    #e1effd 151.2deg,
-    #dae8f7 158.4deg,
-    #ceddec 162deg,
-    #bdcddd 165.6deg,
-    #a7b9ca 169.2deg,
-    #8c9fb2 172.8deg,
-    #475e75 176.4deg,
-    #253e57 180deg,
-    #8798ad 234deg,
-    #ff0000 280.8deg,
-    #d8dbed 324deg,
-    #d4d7e9 331.2deg,
-    #c8cde0 334.8deg,
-    #b5bcd0 342deg,
-    #9aa5b9 345.6deg,
-    #77869c 352.8deg,
-    #4e6279 356.4deg,
-    #253e57 360deg
-  );
+  background-color: black;
   color: #fff;
   z-index: 1000;
 }
@@ -311,35 +311,36 @@ p {
 */
 
 .content {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  justify-items: center;
+  max-height: 100dvh;
 }
 
 .quality-btn {
   padding: 10px 50px;
   cursor: pointer;
   border: none;
-  color: black;
+  color: white;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .buttons-container {
-  grid-column: 1 / -1;
   display: flex;
+  gap: 20px;
   justify-content: space-around;
 }
 
 .buttons-container span {
-  border: 1px solid black;
+  border: 1px solid white;
   border-radius: 20px;
 }
 
 .quality-btn.selected {
-  background: #ffffff;
+  background: greenyellow;
 }
 
 #enterButton:disabled {
@@ -350,30 +351,33 @@ p {
 #enterButton {
   cursor: pointer;
   justify-self: center;
-  font-family: "Zhirok Typeface";
+  font-family: "Host Grotesk";
   font-size: 70px;
-  color: black;
-  -webkit-text-stroke: 2px white;
+  color: white;
 }
 
 .quality-options {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  align-items: center;
-  justify-self: center;
-  margin-top: -100px;
-
-  display: grid;
-  gap: 50px;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(3, max-content);
-  font-family: "OT Neue Montreal Book Semi Squeezed";
-  font-size: 50px;
+  margin-top: 50px;
+  display: flex;
+  justify-content: center;
+  font-family: "Host Grotesk";
+  font-size: 32px;
 }
 
 .quality-options span {
   justify-self: center;
-  grid-column: 1 / -1;
+  font-family: "Host Grotesk";
+}
+
+.quality-wrapper {
+  border: 1px solid white;
+  border-radius: 20px;
+  padding: 12px;
+  display: flex;
+  gap: 32px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #enterButton {
@@ -383,29 +387,22 @@ p {
 }
 
 #enterButton:hover {
-  color: white;
+  color: greenyellow;
 }
 
 .landing-info {
-  font-family: "OT Neue Montreal Book Semi Squeezed";
-  font-size: 30px;
+  font-family: "Host Grotesk";
+  justify-self: center;
+  font-size: 2rem;
   margin-top: 100px;
-  margin-left: 30px;
-
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  display: flex;
+  gap: 22px;
+  flex-direction: column;
+  align-items: center;
 }
-
-.second-p {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.third-p {
-  grid-column: 2;
-  grid-row: 2;
+.landing-info p {
+  text-align: center;
+  max-width: 1000px;
 }
 
 .loading-screen {
@@ -414,6 +411,17 @@ p {
 
 .webgl {
   z-index: 1; /* Below both overlays */
+}
+
+@media (max-width: 900px) {
+  .landing-info p {
+    max-width: 600px;
+    font-size: 1rem;
+  }
+
+  #enterButton {
+    font-size: 2rem;
+  }
 }
 
 /* LANDING PAGE 3D PORTFOLIO */
