@@ -1,4 +1,5 @@
 @import url("./fonts.css");
+@import url("./styles/audioPlayer.css");
 @import url("https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap");
 
 body {
@@ -260,7 +261,8 @@ p {
 }
 
 .album-info {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   font-family: "Junicode Bold Italic";
   font-style: italic;

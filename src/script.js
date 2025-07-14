@@ -6,9 +6,11 @@ import GUI from "lil-gui";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { AudioLoader, AudioListener, PositionalAudio } from "three";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/Addons.js";
 import { CopyShader } from "three/examples/jsm/Addons.js";
+import { PlayHandler } from "./modules/audioPlayer.js";
 
 import Stats from "stats.js";
 
@@ -58,50 +60,37 @@ const getQualitySettings = () => {
 // until here ====================
 
 /**
- * SHADERS
+ * AUDIO PLAYER CONFIGURATION
  */
 
-const degradationShader = {
-  uniforms: {
-    tDiffuse: { value: null },
-    time: { value: 0 },
-    noiseIntensity: { value: 0.03 },
-  },
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform sampler2D tDiffuse;
-    uniform float time;
-    uniform float noiseIntensity;
-    
-    varying vec2 vUv;
-    
-    float random(vec2 st) {
-      return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-    }
-    
-    void main() {
-      vec4 color = texture2D(tDiffuse, vUv);
-      
-      // Signed noise in [-0.5, 0.5] range
-      float noise = (random(vUv + time) - 0.5) * 2.0 * noiseIntensity;
-      
-      // Preserve luminance while adding noise
-      float luminance = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-      color.rgb += noise * mix(1.0, luminance, 0.5);
-      
-      // Maintain original brightness
-      color.rgb = mix(color.rgb, color.rgb * (1.0 + noise), 0.2);
-      
-      gl_FragColor = color;
-    }
-  `,
-};
+let current = 0; // índice da faixa
+let player = null; // PositionalAudio
+const buffers = {}; // cache dos AudioBuffers
+let muted = false;
+const audioLoader = new AudioLoader();
+
+function loadTrack(index) {
+  const { name, url } = playlist[index];
+
+  const play = (buffer) => {
+    if (player.isPlaying) player.stop();
+    player.setBuffer(buffer);
+    player.setLoop(true);
+    player.setVolume(muted ? 0 : 0.4);
+    player.play();
+    document.getElementById("trackName").textContent = name;
+  };
+
+  if (buffers[url]) {
+    play(buffers[url]); // buffer já em cache
+  } else {
+    audioLoader.load(url, (buf) => {
+      buffers[url] = buf; // guarda no cache
+      play(buf);
+    });
+  }
+}
+//
 
 // Raycasting variables for HTML Elements interaction
 let foundIntersectionPrateleira = false;
@@ -196,6 +185,14 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(1, 6, 1);
 camera.lookAt(3, 1.5, 3);
 scene.add(camera);
+
+// **
+//  AUDIO LISTENER
+// */
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+//
 
 //**
 // FIRST PERSON CONTROLS and Orbit
@@ -292,6 +289,38 @@ document.getElementById("enterButton").addEventListener("click", () => {
       scene.add(gltf.scene);
       fpControls.colliders = gltf.scene.children[0];
       camera.lookAt(3, 1.5, 3);
+
+      // audio
+      //
+      // ***************************************************************
+
+      player = new PositionalAudio(listener);
+      player.setRefDistance(2); // volume 100 % até 2 unid.
+      player.setRolloffFactor(1); // curva padrão de queda
+
+      /* 2. prende no mesh chamado \"vinilera\" — ou no root se não achar */
+      const alvo = gltf.scene.getObjectByName("vinilera") || gltf.scene;
+      alvo.add(player);
+
+      const playlist = [
+        {
+          name: "Martinelli - translateX (Unreleased)",
+          url: "../music/Martinelli - translateX (mp3).mp3",
+        },
+        {
+          name: "translateY",
+          url: "../music/Martinelli - translateX (mp3).mp3",
+        },
+        {
+          name: "translateZ",
+          url: "../music/Martinelli - translateZ (mp3).mp3",
+        },
+      ];
+
+      new PlayHandler(player, playlist, 0.4); // volume padrão = 1
+
+      /* 3. toca a primeira faixa da playlist */
+      loadTrack(current);
     });
 
     fpControls.enabled = true;
