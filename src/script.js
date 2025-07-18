@@ -298,7 +298,6 @@ document.getElementById("enterButton").addEventListener("click", () => {
       player.setRefDistance(2); // volume 100 % até 2 unid.
       player.setRolloffFactor(1); // curva padrão de queda
 
-      /* 2. prende no mesh chamado \"vinilera\" — ou no root se não achar */
       const alvo = gltf.scene.getObjectByName("vinilera") || gltf.scene;
       alvo.add(player);
 
