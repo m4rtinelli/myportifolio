@@ -280,7 +280,6 @@ p {
   font-style: italic;
   font-weight: bold;
   font-size: 18px;
-
   padding: 5px 7px;
   border: 1px solid black;
   border-radius: 20px;
@@ -289,6 +288,11 @@ p {
   background-color: transparent;
   transition: background-color 0.2s cubic-bezier(0.75, 0, 0.63, 0.99),
     border 0.2s cubic-bezier(0.75, 0, 0.63, 0.99);
+}
+
+.purchase-button a {
+  text-decoration: none;
+  color: black;
 }
 
 .purchase-button:hover {
