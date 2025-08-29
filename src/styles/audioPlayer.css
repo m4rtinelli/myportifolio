@@ -1,39 +1,39 @@
 /* Painel do player */
 .player-controls {
-  position: fixed; /* gruda na viewport, não no layout */
-  bottom: 2rem; /* distância da borda inferior */
-  left: 50%; /* ponto central horizontal…  */
-  transform: translateX(-50%); /* …ajustado para o centro exato */
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
 
-  display: flex; /* itens lado a lado */
-  align-items: center; /* alinha verticalmente */
-  gap: 1rem; /* espaço entre botões / texto */
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 
   padding: 0.6rem 1rem;
-  border-radius: 999px; /* pílula */
-  background: rgba(0, 0, 0, 0.6); /* semitransparente para ver o 3D atrás */
-  backdrop-filter: blur(6px); /* leve blur no fundo (opcional) */
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
   color: #fff;
   font-family: system-ui, sans-serif;
-  z-index: 1000; /* garante que fique sobre o canvas */
+  z-index: 1000;
 }
 
 /* Ajustes visuais dos botões */
 .player-controls button {
-  all: unset; /* remove herança de estilos */
+  all: unset;
   cursor: pointer;
   font-size: 1.25rem;
-  line-height: 1; /* evita “saltar” verticalmente */
+  line-height: 1;
   transition: transform 0.15s;
 }
 
 .player-controls button:active {
-  transform: scale(0.9); /* feedback de clique */
+  transform: scale(0.9);
 }
 
 /* Nome da música: evita quebrar linha */
 #trackName {
-  max-width: 40vw; /* não deixa crescer demais */
+  max-width: 40vw;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
