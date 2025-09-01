@@ -116,6 +116,11 @@ header a {
   transform: translateX(0);
 }
 
+.work-info {
+  mix-blend-mode: unset !important;
+  align-self: flex-end;
+}
+
 .header-selected {
   text-decoration: underline;
 }
