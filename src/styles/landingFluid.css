@@ -164,9 +164,104 @@ section {
   transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
-@media (max-width: 1000px) {
+/* menu mobile */
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 16px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.hamburger span {
+  display: block;
+  height: 2px;
+  background: #fff; /* cor das barrinhas */
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.63, 0, 0, 0.97);
+}
+
+/* X animado */
+.hamburger.active span:nth-child(1) {
+  transform: rotate(44deg) translate(5px, 5px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+/* ------------------------------------------------------------------------------------*/
+
+/* MOBILE */
+@media (max-width: 1100px) {
+  .exp-header {
+    display: none;
+  }
+
   nav {
     flex-direction: column;
     gap: 2rem;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-items {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 10dvh;
+    right: 20px;
+    background: rgb(26, 26, 26);
+    padding: 20px;
+    border-radius: 12px;
+    gap: 1.8rem;
+  }
+
+  nav {
+    display: flex;
+    flex-direction: row;
+  }
+  .nav-items.active {
+    display: flex;
+  }
+
+  #welcomeText {
+    font-size: 4rem;
+  }
+  p,
+  a {
+    font-size: 1rem;
+    font-weight: 450;
+  }
+
+  .info-txt {
+    width: 66dvw;
+  }
+
+  .contact {
+    width: 80dvw;
+  }
+
+  .mail-hero-contact {
+    font-size: 2.2rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 600px) {
+  #welcomeText {
+    font-size: 2rem;
+  }
+
+  .mail-hero-contact {
+    font-size: 1.6rem;
   }
 }
