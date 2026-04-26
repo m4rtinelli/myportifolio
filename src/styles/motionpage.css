@@ -47,7 +47,6 @@ header a {
 }
 
 .gallery-motion {
-  width: 100%;
   background-color: black;
   display: flex;
   flex-direction: column;
@@ -86,6 +85,7 @@ header a {
   min-height: 100%;
   display: flex;
   align-content: center;
+  justify-content: center;
 }
 
 .video-gallery {
@@ -118,7 +118,6 @@ header a {
 
 .work-info {
   mix-blend-mode: unset !important;
-  align-self: flex-end;
 }
 
 .header-selected {
