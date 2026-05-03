@@ -17,3 +17,7 @@ pnpm-debug.log*
 # arquivos de ambiente
 .env
 .env.*
+
+# sistema
+.DS_Store
+Thumbs.db
