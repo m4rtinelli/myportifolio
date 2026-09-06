@@ -437,6 +437,9 @@ document.getElementById("enterButton").addEventListener("click", () => {
          * Spawn na altura dos olhos, olhando reto para frente: o alvo do
          * lookAt usa o mesmo Y da camera, entao nao ha inclinacao nenhuma.
          */
+        // As paredes da galeria usam o mesmo material do quarto.
+        secretRoom.applyRoomSurfaces(gltf.scene);
+
         worldManager.register("main", {
           root: gltf.scene,
           colliders: gltf.scene.children[0],
@@ -447,6 +450,7 @@ document.getElementById("enterButton").addEventListener("click", () => {
           onEnter: () => {
             proximityZones.world = "main";
             secretRoom.sleep();
+            ambientLight.visible = true;
           },
         });
 
@@ -459,6 +463,10 @@ document.getElementById("enterButton").addEventListener("click", () => {
           environment: null,
           onEnter: () => {
             proximityZones.world = "secret";
+            secretRoom.warmUp();
+            /* A galeria e preta de proposito: o ambiente quente do quarto
+               por cima lavaria o derrame das obras. */
+            ambientLight.visible = false;
           },
         });
 
@@ -495,6 +503,86 @@ document.getElementById("enterButton").addEventListener("click", () => {
             console.info(`[proximity] zona "${id}": ${found} meshes`);
           }
         });
+
+        /*
+         * Luz de galeria e dificil de acertar no escuro: estes controles
+         * deixam calibrar andando pela sala.
+         */
+        const galleryFolder = gui.addFolder("Gallery light");
+        galleryFolder.close();
+
+        /*
+         * Cor sempre por string hex, nunca ligada direto no THREE.Color.
+         *
+         * Com o color management do three ligado, o Color guarda os
+         * componentes ja convertidos para linear. O lil-gui le .r/.g/.b crus,
+         * entao ligado direto ele mostraria um swatch lavado e gravaria
+         * valores linearizados por cima — a cor ia derivando a cada mexida.
+         * Indo e voltando por hex, os dois lados falam sRGB.
+         */
+        const addColor = (label, source, apply) => {
+          const proxy = { hex: `#${source.getHexString()}` };
+          galleryFolder.addColor(proxy, "hex").name(label).onChange(apply);
+          return proxy;
+        };
+
+        /*
+         * Nao ha mais spot: quem ilumina a sala sao as proprias obras, pelos
+         * dois planos aditivos de cada uma. Os controles aqui mexem nos
+         * uniforms compartilhados por todos os derrames de uma vez.
+         */
+        const glowSettings = {
+          parede: secretRoom.glows[0].material.uniforms.uOpacity.value,
+          chao: secretRoom.glows[1].material.uniforms.uOpacity.value,
+          desfoque: secretRoom.glows[0].material.uniforms.uBlur.value,
+          alcance: secretRoom.glows[1].material.uniforms.uFalloff.value,
+        };
+
+        /* Os planos alternam parede/chao na lista, entao o par (indice % 2)
+           diz qual e qual sem precisar guardar duas listas. */
+        const applyToGlows = (uniform, mode) => (value) =>
+          secretRoom.glows.forEach((glow, index) => {
+            if (mode === undefined || index % 2 === mode) {
+              glow.material.uniforms[uniform].value = value;
+            }
+          });
+
+        galleryFolder.add(glowSettings, "parede", 0, 2, 0.01).name("brilho na parede")
+          .onChange(applyToGlows("uOpacity", 0));
+        galleryFolder.add(glowSettings, "chao", 0, 2, 0.01).name("brilho no chao")
+          .onChange(applyToGlows("uOpacity", 1));
+        galleryFolder.add(glowSettings, "desfoque", 0, 0.15, 0.005).name("desfoque")
+          .onChange(applyToGlows("uBlur"));
+        galleryFolder.add(glowSettings, "alcance", 0.5, 6, 0.1).name("alcance no chao")
+          .onChange(applyToGlows("uFalloff", 1));
+
+        const floorColor = addColor("chao", secretRoom.floor.material.color,
+          (hex) => secretRoom.floor.material.color.set(hex));
+
+        /*
+         * Acertar a luz e ir e voltar entre o navegador e o editor. Este
+         * botao imprime os valores no formato das constantes do
+         * secretRoom.js, para colar la sem transcrever na mao.
+         */
+        galleryFolder.add(
+          {
+            log: () =>
+              [
+                "// secretRoom.js",
+                `const AMBIENT_COLOR = 0x${ambientColor.hex.slice(1)};`,
+                `const AMBIENT_INTENSITY = ${secretRoom.ambient.intensity};`,
+                `const BOUNCE_SKY = 0x${bounceSky.hex.slice(1)};`,
+                `const BOUNCE_GROUND = 0x${ceilingColor.hex.slice(1)};`,
+                `const BOUNCE_INTENSITY = ${secretRoom.bounce.intensity};`,
+                `const GLOW_WALL_OPACITY = ${glowSettings.parede};`,
+                `const GLOW_FLOOR_OPACITY = ${glowSettings.chao};`,
+                `const GLOW_BLUR = ${glowSettings.desfoque};`,
+                `const GLOW_FLOOR_FALLOFF = ${glowSettings.alcance};`,
+                `const FLOOR_COLOR = 0x${floorColor.hex.slice(1)};`,
+              ].forEach((line) => console.log(line)),
+          },
+          "log"
+        ).name("copiar valores");
 
         // Posiciona a camera, liga os colliders e so entao liga o controle
         // — o setter `enabled` guarda o euler atual, e ligar antes de mover
@@ -592,6 +680,14 @@ const tick = () => {
   secretRoom.update(camera.position);
 
   const zone = proximityZones.update();
+
+  /*
+   * Adianta o download das obras enquanto o jogador ainda esta lendo o
+   * "Press F" na frente do computador. O tempo entre ver o aviso e apertar
+   * costuma bastar para os primeiros quadros chegarem, e a galeria deixa de
+   * se preencher a frente de quem anda. Idempotente.
+   */
+  if (zone?.id === "computer") secretRoom.warmUp();
 
   const inMainRoom = worldManager.currentId === "main";
 

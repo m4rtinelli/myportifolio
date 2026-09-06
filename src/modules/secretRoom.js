@@ -11,9 +11,79 @@ import { projects, isImage } from "../motiondesign/projects.js";
  * também, sem reexportar nada do Blender.
  */
 
-const WALL_COLOR = 0xe8e4dc;
-const FLOOR_COLOR = 0x2b2724;
-const CEILING_COLOR = 0xf2efe9;
+/*
+ * A sala é preta: parede, chão e teto. O que se vê é o que as obras
+ * derramam em volta delas — ver o bloco de brilho mais abaixo.
+ */
+const WALL_COLOR = 0x000000;
+const FLOOR_COLOR = 0x000000;
+const CEILING_COLOR = 0x000000;
+
+/*
+ * Nome do material das paredes dentro do .glb do quarto.
+ *
+ * Continua sendo emprestado, mesmo com a sala preta: sem luz nenhuma ele
+ * renderiza preto de qualquer jeito, e fica de rede de segurança para quem
+ * levantar o ambiente no lil-gui — aí o cimento volta em vez de um preto
+ * chapado.
+ */
+const ROOM_WALL_MATERIAL = "walls";
+
+/* De quantas em quantas unidades a textura da parede se repete. */
+const WALL_TEXTURE_TILE = 5;
+
+/* ---------- luz ---------- */
+
+/*
+ * As duas luzes da sala ficam em zero.
+ *
+ * Não é esquecimento: a galeria é iluminada pelas obras, e qualquer luz
+ * geral por cima levanta o preto e desmancha o efeito. Elas continuam na
+ * cena porque os sliders do lil-gui estão ligados nelas — dá para levantar
+ * um respiro sem mexer no código, e as cores abaixo são o ponto de partida
+ * se alguém quiser fazer isso.
+ *
+ * Sobre o HemisphereLight, se ele voltar a ser usado: entrega `sky` a quem
+ * tem a normal para cima e `ground` a quem tem para baixo. O teto olha para
+ * baixo, então quem pinta o teto é o `ground`.
+ */
+const AMBIENT_COLOR = 0xffd0a0;
+const AMBIENT_INTENSITY = 0;
+
+const BOUNCE_SKY = 0xa87948;
+const BOUNCE_GROUND = 0x33322f;
+const BOUNCE_INTENSITY = 0;
+
+/* ---------- brilho das obras ---------- */
+
+/*
+ * Não há mais luz nenhuma na sala: nem spot, nem ambiente, nem rebote.
+ *
+ * Quem ilumina são as próprias obras. Cada quadro ganha dois planos aditivos
+ * com a mesma textura do vídeo — um atrás, espalhando na parede, e outro
+ * deitado no chão, como poça de luz. Como o material da obra é Basic, ele já
+ * é auto-iluminado, então a sala inteira preta com esses dois derrames é o
+ * que dá a leitura da referência.
+ *
+ * Custa duas quads a mais por obra e nenhuma luz dinâmica — bem mais barato
+ * do que os catorze spots que estavam aqui antes.
+ */
+
+/* Quanto do brilho vaza para a parede e para o chão. */
+const GLOW_WALL_OPACITY = 0.55;
+const GLOW_FLOOR_OPACITY = 0.45;
+
+/* O halo é maior que a obra; é isso que faz o derrame aparecer em volta. */
+const GLOW_WALL_SCALE = 2.2;
+
+/* Comprimento da poça no chão, em unidades de mundo. */
+const GLOW_FLOOR_DEPTH = 3.2;
+
+/* Raio do desfoque, em uv. Sem ele o derrame vira uma cópia nítida da obra. */
+const GLOW_BLUR = 0.045;
+
+/* Potência da máscara do chão: maior = a poça morre mais perto da parede. */
+const GLOW_FLOOR_FALLOFF = 2.2;
 
 /* Quantos vídeos podem tocar ao mesmo tempo. Os arquivos passam de 60 MB;
    deixar os quatorze rodando juntos derruba a banda e a placa de vídeo. */
@@ -58,6 +128,60 @@ const UNIT_PLANE = new THREE.PlaneGeometry(1, 1);
 
 const WALL = { NORTH: 0, SOUTH: 1, WEST: 2, EAST: 3 };
 
+/*
+ * Shader do derrame.
+ *
+ * Um só para os dois usos: o `uMode` escolhe entre a máscara redonda do halo
+ * de parede e a máscara direcional da poça de chão, que nasce colada na
+ * parede e morre indo para dentro da sala.
+ *
+ * O desfoque é um box de 9 amostras. Não é bonito de perto, mas é o que
+ * transforma a cópia nítida do vídeo em luz derramada, e a 9 taps sai muito
+ * mais barato do que um passe de bloom no EffectComposer.
+ */
+const GLOW_VERTEX = /* glsl */ `
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const GLOW_FRAGMENT = /* glsl */ `
+  uniform sampler2D uMap;
+  uniform float uOpacity;
+  uniform float uBlur;
+  uniform float uFalloff;
+  uniform float uMode; // 0 = parede, 1 = chao
+
+  varying vec2 vUv;
+
+  vec3 blurred(vec2 uv) {
+    vec3 sum = vec3(0.0);
+    for (int x = -1; x <= 1; x++) {
+      for (int y = -1; y <= 1; y++) {
+        vec2 offset = vec2(float(x), float(y)) * uBlur;
+        sum += texture2D(uMap, clamp(uv + offset, 0.001, 0.999)).rgb;
+      }
+    }
+    return sum / 9.0;
+  }
+
+  void main() {
+    // No chao a imagem entra espelhada, como reflexo.
+    vec2 uv = vec2(vUv.x, mix(vUv.y, 1.0 - vUv.y, uMode));
+
+    float radial = 1.0 - smoothstep(0.0, 0.5, length(vUv - 0.5));
+    float toward = pow(clamp(vUv.y, 0.0, 1.0), uFalloff);
+    float sides = 1.0 - smoothstep(0.25, 0.5, abs(vUv.x - 0.5));
+    float mask = mix(radial, toward * sides, uMode);
+
+    // Aditivo: o alpha nao conta, quem soma luz e o rgb.
+    gl_FragColor = vec4(blurred(uv) * mask * uOpacity, 1.0);
+  }
+`;
+
 const _scratch = new THREE.Vector3();
 
 /**
@@ -70,9 +194,14 @@ class Artwork {
     this.border = border;
     this.project = project;
     this.source = project.media[0] ?? null;
-    this.active = false;
+    this.prepared = false; // ja buscou o arquivo
+    this.playing = false; // esta rodando agora
     this.texture = null;
     this.video = null;
+
+    /* Os planos de derrame (parede e chao). Nascem invisiveis: sem textura
+       eles pintariam um retangulo do lixo da GPU na parede. */
+    this.glows = [];
   }
 
   /**
@@ -93,14 +222,60 @@ class Artwork {
 
     this.mesh.scale.set(width, height, 1);
     this.border.scale.set(width + FRAME_MARGIN, height + FRAME_MARGIN, 1);
+
+    /*
+     * Os derrames acompanham a obra. Sem isto, um vídeo em pé mantinha o
+     * halo deitado que veio da proporção provisória, e o brilho ficava mais
+     * largo que o quadro que o produziu.
+     *
+     * A poça do chão só acompanha a largura: o comprimento dela é o quanto a
+     * luz avança sala adentro, que não tem a ver com a altura da obra.
+     */
+    const [wall, floor] = this.glows;
+    wall?.scale.set(width * GLOW_WALL_SCALE, height * GLOW_WALL_SCALE, 1);
+    floor?.scale.set(width * GLOW_WALL_SCALE, GLOW_FLOOR_DEPTH, 1);
   }
 
-  activate() {
-    if (this.active || !this.source) return;
-    this.active = true;
+  /**
+   * Busca o arquivo e deixa o primeiro quadro na parede, parado.
+   *
+   * Separado do play de propósito: antes, o vídeo só era criado quando a
+   * obra entrava nas três mais próximas, então cada moldura começava do zero
+   * enquanto você andava e a sala vivia se preenchendo à sua frente. Agora a
+   * sala inteira já chega pronta e o play é só o que se move.
+   *
+   * Idempotente — pode ser chamado a cada frame sem custo.
+   */
+  prepare() {
+    if (this.prepared || !this.source) return;
+    this.prepared = true;
 
-    if (isImage(this.source)) this._activateImage();
-    else this._activateVideo();
+    if (isImage(this.source)) this._prepareImage();
+    else this._prepareVideo();
+  }
+
+  play() {
+    this.prepare();
+    if (this.playing || !this.video) return;
+    this.playing = true;
+
+    this.video.play().catch((error) => {
+      /*
+       * Silenciar aqui foi o que escondeu o bug da cor: o quadro ficava
+       * preto e não havia como saber se era o vídeo ou o material.
+       */
+      console.warn(
+        `[gallery] "${this.project.id}" nao tocou: ${error?.message ?? error}`
+      );
+    });
+  }
+
+  /* Pausa, mas continua pendurado: a obra fica no quadro em que parou em vez
+     de apagar, que é o que uma galeria faria. */
+  pause() {
+    if (!this.playing) return;
+    this.playing = false;
+    this.video?.pause();
   }
 
   /*
@@ -115,11 +290,23 @@ class Artwork {
     this.mesh.material.map = this.texture;
     this.mesh.material.color.setHex(0xffffff);
     this.mesh.material.needsUpdate = true;
+
+    /* Os derrames leem a mesma textura da obra — nao ha copia nem segundo
+       download, e o brilho na parede acompanha o video quadro a quadro. */
+    this.glows.forEach((glow) => {
+      glow.material.uniforms.uMap.value = this.texture;
+      glow.visible = true;
+    });
+
+    /*
+     * Força uma subida da textura para a GPU. Vídeo parado não apresenta
+     * quadro novo, e o VideoTexture só se marca sozinho quando apresenta —
+     * sem isto, uma obra pausada podia ficar preta mesmo já carregada.
+     */
+    this.texture.needsUpdate = true;
   }
 
-  _activateImage() {
-    if (this.texture) return;
-
+  _prepareImage() {
     this.texture = new THREE.TextureLoader().load(
       encodeURI(this.source),
       (texture) => {
@@ -130,53 +317,44 @@ class Artwork {
     this.texture.colorSpace = THREE.SRGBColorSpace;
   }
 
-  _activateVideo() {
-    if (!this.video) {
-      const video = document.createElement("video");
-      video.src = encodeURI(this.source);
-      // "none", e não "metadata": nem o cabeçalho é baixado antes da hora.
-      video.preload = "none";
-      video.loop = true;
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute("webkit-playsinline", "");
-      this.video = video;
+  _prepareVideo() {
+    const video = document.createElement("video");
+    video.src = encodeURI(this.source);
+    /* "auto" porque queremos o primeiro quadro na parede antes de alguém
+       chegar perto; quem segura a banda é o pause logo depois. */
+    video.preload = "auto";
+    video.loop = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute("webkit-playsinline", "");
+    this.video = video;
 
-      this.texture = new THREE.VideoTexture(video);
-      this.texture.colorSpace = THREE.SRGBColorSpace;
+    this.texture = new THREE.VideoTexture(video);
+    this.texture.colorSpace = THREE.SRGBColorSpace;
 
-      // O cabeçalho chega antes do primeiro quadro, então a moldura já
-      // assume a proporção certa enquanto a imagem ainda está a caminho.
-      video.addEventListener(
-        "loadedmetadata",
-        () => this.fit(video.videoWidth / video.videoHeight),
-        { once: true }
-      );
+    // O cabeçalho chega antes do primeiro quadro, então a moldura já assume
+    // a proporção certa enquanto a imagem ainda está a caminho.
+    video.addEventListener(
+      "loadedmetadata",
+      () => this.fit(video.videoWidth / video.videoHeight),
+      { once: true }
+    );
 
-      video.addEventListener("loadeddata", () => this._lightUp(), {
-        once: true,
-      });
-    }
+    video.addEventListener(
+      "loadeddata",
+      () => {
+        this._lightUp();
+        // Chegou quadro mas ninguém pediu play: fica parado na parede.
+        if (!this.playing) video.pause();
+      },
+      { once: true }
+    );
 
-    this.video.play().catch((error) => {
-      /*
-       * Silenciar aqui foi o que escondeu o bug da cor: o quadro ficava
-       * preto e não havia como saber se era o vídeo ou o material.
-       */
-      console.warn(
-        `[gallery] "${this.project.id}" nao tocou: ${error?.message ?? error}`
-      );
-    });
-  }
-
-  deactivate() {
-    if (!this.active) return;
-    this.active = false;
-    this.video?.pause();
+    video.load();
   }
 
   dispose() {
-    this.deactivate();
+    this.pause();
     this.texture?.dispose();
     if (this.video) this.video.src = "";
   }
@@ -204,6 +382,7 @@ export class SecretRoom {
     this.group.add(this.shell);
 
     this.artworks = [];
+    this.glows = [];
 
     this._buildShell();
     this._buildLights();
@@ -232,11 +411,14 @@ export class SecretRoom {
     floor.rotation.x = -Math.PI / 2;
     floor.name = "secret_floor";
     this.shell.add(floor);
+    this.floor = floor;
 
     const ceiling = this._panel(size, size, CEILING_COLOR);
     ceiling.rotation.x = Math.PI / 2;
     ceiling.position.y = height;
+    ceiling.name = "secret_ceiling";
     this.shell.add(ceiling);
+    this.ceiling = ceiling;
 
     /*
      * As quatro paredes viradas para dentro. A orientação importa: o
@@ -248,35 +430,101 @@ export class SecretRoom {
       [Math.PI, [0, height / 2, half]],
       [Math.PI / 2, [-half, height / 2, 0]],
       [-Math.PI / 2, [half, height / 2, 0]],
-    ].forEach(([rotation, position], index) => {
+    ].map(([rotation, position], index) => {
       const wall = this._panel(size, height, WALL_COLOR);
       wall.rotation.y = rotation;
       wall.position.set(...position);
       wall.name = `secret_wall_${index}`;
       this.shell.add(wall);
+      return wall;
     });
+
+    // Guardadas para o applyRoomWalls poder trocar o material depois.
+    this.walls = this.shell.children.filter((child) =>
+      child.name.startsWith("secret_wall_")
+    );
   }
 
+  /**
+   * A sala não tem luz geral: o ambiente é só um respiro quente, e o que
+   * desenha o espaço são os spots do chão apontados para cada obra.
+   *
+   * Os spots nascem junto das molduras (ver _buildFrame), porque cada um
+   * pertence à sua obra — assim eles giram com a moldura e não precisam de
+   * coordenada de mundo por parede.
+   */
   _buildLights() {
-    this.group.add(new THREE.AmbientLight(0xffffff, 0.55));
+    /*
+     * As duas nascem em zero: a sala e preta e quem ilumina sao as obras.
+     * Ficam na cena mesmo assim porque os sliders do lil-gui continuam
+     * ligados nelas — da para levantar um respiro de luz sem mexer no codigo
+     * e sem ter que escolher um tom do nada.
+     */
+    this.ambient = new THREE.AmbientLight(AMBIENT_COLOR, AMBIENT_INTENSITY);
+    this.group.add(this.ambient);
 
-    const key = new THREE.DirectionalLight(0xffffff, 0.7);
-    key.position.set(0, this.height, 0);
-    this.group.add(key);
+    this.bounce = new THREE.HemisphereLight(
+      BOUNCE_SKY,
+      BOUNCE_GROUND,
+      BOUNCE_INTENSITY
+    );
+    this.group.add(this.bounce);
+  }
 
-    /* Uma luz por parede, na altura dos quadros, para as obras não ficarem
-       chapadas contra o branco. */
-    const half = this.size / 2 - 1;
-    [
-      [0, -half],
-      [0, half],
-      [-half, 0],
-      [half, 0],
-    ].forEach(([x, z]) => {
-      const light = new THREE.PointLight(0xfff4e2, 12, this.size, 2);
-      light.position.set(x, this.height - 1.2, z);
-      this.group.add(light);
+  /**
+   * Empresta o material das paredes do quarto para as paredes e o teto da
+   * galeria.
+   *
+   * Clona antes de mexer: o material vem do .glb que ainda está em cena, e
+   * ajustar o `repeat` no original esticaria a textura do quarto junto. O
+   * teto ganha o seu próprio clone porque é quadrado (20x20) e as paredes
+   * são deitadas (20x5) — um `repeat` só serviria mal aos dois.
+   *
+   * @param {THREE.Object3D} root – a cena do glTF já carregada
+   */
+  applyRoomSurfaces(root) {
+    let source = null;
+    root.traverse((object) => {
+      if (source || !object.isMesh) return;
+      const material = object.material;
+      if (material?.name === ROOM_WALL_MATERIAL) source = material;
     });
+
+    if (!source) {
+      console.warn(
+        `[gallery] material "${ROOM_WALL_MATERIAL}" nao achado no .glb; ` +
+          "as paredes ficam na cor lisa"
+      );
+      return false;
+    }
+
+    const tile = (repeatX, repeatY) => {
+      const material = source.clone();
+      if (!material.map) return material;
+
+      // A textura tambem e compartilhada, entao o clone vale para ela.
+      material.map = material.map.clone();
+      material.map.wrapS = THREE.RepeatWrapping;
+      material.map.wrapT = THREE.RepeatWrapping;
+      material.map.repeat.set(repeatX, repeatY);
+      material.map.needsUpdate = true;
+      return material;
+    };
+
+    const wallMaterial = tile(
+      this.size / WALL_TEXTURE_TILE,
+      this.height / WALL_TEXTURE_TILE
+    );
+    this.walls.forEach((wall) => {
+      wall.material = wallMaterial;
+    });
+
+    this.ceiling.material = tile(
+      this.size / WALL_TEXTURE_TILE,
+      this.size / WALL_TEXTURE_TILE
+    );
+
+    return true;
   }
 
   /* ---------- obras ---------- */
@@ -372,7 +620,67 @@ export class SecretRoom {
     artwork.fit(DEFAULT_ASPECT);
     this.artworks.push(artwork);
 
+    group.add(...this._buildGlow(artwork, canvas.scale.x, canvas.scale.y));
+
     return group;
+  }
+
+  /**
+   * O spot que ilumina uma obra, do chão para cima.
+   *
+   * Fica no espaço local da moldura: (0, -altura, +z) é sempre "no chão, um
+   * passo à frente da parede", em qualquer das três paredes. Em coordenada
+   * de mundo isso viraria um caso por parede, com sinal trocado em dois
+   * deles — a rotação do grupo já resolve.
+   */
+  /**
+   * Os dois planos de derrame de uma obra.
+   *
+   * O halo fica atrás da moldura, no vão entre ela e a parede: como não
+   * escreve profundidade mas testa, a moldura opaca recorta o meio dele
+   * sozinha e sobra só o que vaza em volta — que é o efeito.
+   *
+   * A poça fica deitada no chão, encostada na parede e indo para dentro da
+   * sala. Ambos em espaço local da moldura, então giram junto com ela em
+   * qualquer das paredes.
+   */
+  _buildGlow(artwork, width, height) {
+    const material = (mode, opacity) =>
+      new THREE.ShaderMaterial({
+        uniforms: {
+          uMap: { value: null },
+          uOpacity: { value: opacity },
+          uBlur: { value: GLOW_BLUR },
+          uFalloff: { value: GLOW_FLOOR_FALLOFF },
+          uMode: { value: mode },
+        },
+        vertexShader: GLOW_VERTEX,
+        fragmentShader: GLOW_FRAGMENT,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+
+    const wall = new THREE.Mesh(UNIT_PLANE, material(0, GLOW_WALL_OPACITY));
+    wall.scale.set(width * GLOW_WALL_SCALE, height * GLOW_WALL_SCALE, 1);
+    // Atrás da moldura, no vão até a parede.
+    wall.position.z = -0.03;
+    wall.visible = false;
+    wall.name = "glow_wall";
+
+    const floor = new THREE.Mesh(UNIT_PLANE, material(1, GLOW_FLOOR_OPACITY));
+    floor.scale.set(width * GLOW_WALL_SCALE, GLOW_FLOOR_DEPTH, 1);
+    floor.rotation.x = -Math.PI / 2;
+    /* Rente ao chão: 1cm acima evita brigar em z com o piso. A poça começa
+       na parede e avança meio comprimento para dentro da sala. */
+    floor.position.set(0, 0.01 - ART_HEIGHT, GLOW_FLOOR_DEPTH / 2);
+    floor.visible = false;
+    floor.name = "glow_floor";
+
+    artwork.glows.push(wall, floor);
+    this.glows.push(wall, floor);
+
+    return [wall, floor];
   }
 
   /* ---------- saída ---------- */
@@ -415,15 +723,30 @@ export class SecretRoom {
       }))
       .sort((a, b) => a.distance - b.distance)
       .forEach(({ artwork, distance }, index) => {
-        if (index < MAX_ACTIVE && distance < this.wakeDistance) artwork.activate();
-        else artwork.deactivate();
+        if (index < MAX_ACTIVE && distance < this.wakeDistance) artwork.play();
+        else artwork.pause();
       });
   }
 
-  /* Sair da sala pausa tudo: sem isso os vídeos seguem baixando enquanto o
-     jogador já está de volta no quarto. */
+  /**
+   * Busca todas as obras de uma vez, para a sala já estar pendurada quando
+   * alguém entra em vez de ir se preenchendo conforme a caminhada.
+   *
+   * Chamado quando o jogador chega perto do computador, ainda no quarto: o
+   * tempo entre ver o "Press F" e apertar costuma bastar para os primeiros
+   * quadros chegarem. Idempotente, então pode ser chamado por frame.
+   *
+   * Só o carregamento é adiantado; o play continua sendo das mais próximas,
+   * que é quem segura a banda.
+   */
+  warmUp() {
+    this.artworks.forEach((artwork) => artwork.prepare());
+  }
+
+  /* Sair da sala pausa tudo: sem isso os vídeos seguem rodando enquanto o
+     jogador já está de volta no quarto. O que já baixou fica. */
   sleep() {
-    this.artworks.forEach((artwork) => artwork.deactivate());
+    this.artworks.forEach((artwork) => artwork.pause());
   }
 
   dispose() {
