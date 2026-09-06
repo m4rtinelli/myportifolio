@@ -12,6 +12,13 @@ export class PlayHandler {
     this.playlist = playlist;
     this.current = 0;
     this.muted = false;
+
+    // Fonte externa ativa (um mix do SoundCloud). Enquanto existe, a barra
+    // controla ela em vez do audio da cena: os botoes sao os mesmos, so o
+    // destino muda. O estado de play vem por updateExternal, porque o widget
+    // do SoundCloud responde por eventos e nao por leitura sincrona.
+    this.external = null;
+    this.externalPlaying = false;
     this.DEFAULT_VOLUME = defaultVolume;
 
     this.cache = {};
@@ -43,29 +50,78 @@ export class PlayHandler {
   }
 
   play() {
+    if (this.external) {
+      this.external.play();
+      return; // o widget confirma pelo evento PLAY, via updateExternal
+    }
+
     if (!this.player.buffer || this.player.isPlaying) return;
     this.player.play();
     this._syncPlayButton();
   }
 
   pause() {
+    if (this.external) {
+      this.external.pause();
+      return;
+    }
+
     if (!this.player.isPlaying) return;
     this.player.pause();
     this._syncPlayButton();
   }
 
   togglePlay() {
-    if (this.player.isPlaying) this.pause();
+    if (this._isPlaying()) this.pause();
     else this.play();
   }
 
   toggleMute() {
     this.muted = !this.muted;
+    // Silencia os dois: o M tem que calar tudo, nao so a fonte ativa.
     this.player.setVolume(this.muted ? 0 : this.DEFAULT_VOLUME);
+    this.external?.setMuted(this.muted);
     if (this.$mute) {
       this.$mute.textContent = this.muted ? "🔇" : "🔊";
       this.$mute.setAttribute("aria-pressed", String(this.muted));
     }
+  }
+
+  /**
+   * Passa o comando da barra para um mix. O audio da cena para aqui, e nao
+   * por this.pause(), que a esta altura ja apontaria para a fonte externa.
+   *
+   * @param {{name: string, play: Function, pause: Function, setMuted: Function}} source
+   */
+  attachExternal(source) {
+    if (this.player.isPlaying) this.player.pause();
+
+    this.external = source;
+    this.externalPlaying = true;
+    source.setMuted(this.muted);
+
+    this._setStatus(source.name);
+    this._syncPlayButton();
+  }
+
+  /* O widget avisa quando toca ou pausa por conta propria (pelos controles
+     dele), para o botao da barra nao ficar mostrando o estado errado. */
+  updateExternal(isPlaying) {
+    if (!this.external) return;
+    this.externalPlaying = isPlaying;
+    this._syncPlayButton();
+  }
+
+  /* Devolve o comando para a faixa da cena, parada: quem apertar play em
+     seguida volta a ouvir a musica do ambiente. */
+  detachExternal() {
+    if (!this.external) return;
+
+    this.external = null;
+    this.externalPlaying = false;
+
+    this._setStatus(this.playlist[this.current].name);
+    this._syncPlayButton();
   }
 
   /* ----------------- Interno -------------------------------------- */
@@ -83,9 +139,18 @@ export class PlayHandler {
   }
 
   _switch(dir) {
+    // Trocar de faixa da cena tira o mix do ar; deixar os dois tocando
+    // juntos seria o unico jeito de a barra mentir sobre o que esta soando.
+    this.external?.pause();
+    this.detachExternal();
+
     this.current =
       (this.current + dir + this.playlist.length) % this.playlist.length;
     this._load(this.current);
+  }
+
+  _isPlaying() {
+    return this.external ? this.externalPlaying : this.player.isPlaying;
   }
 
   _setStatus(text) {
@@ -94,7 +159,7 @@ export class PlayHandler {
 
   _syncPlayButton() {
     if (!this.$play) return;
-    const playing = this.player.isPlaying;
+    const playing = this._isPlaying();
     this.$play.textContent = playing ? "⏸" : "▶";
     this.$play.setAttribute("aria-label", playing ? "Pause" : "Play");
     this.$root?.classList.toggle("is-playing", playing);

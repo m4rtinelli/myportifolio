@@ -307,6 +307,120 @@ p {
   background-color: #d4cc8d;
   border: 1px solid rgb(63, 63, 17);
 }
+/* Sets (SoundCloud) ------------------------------------------------- */
+
+/* Mesma caixa do album-wrapper, mas em coluna: o player ocupa a largura
+   toda, entao as infos ficam por cima em vez de ao lado. */
+.set-wrapper {
+  border-radius: 5px;
+  background-color: #989360;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.set-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: "Junicode Bold Italic";
+  font-style: italic;
+  font-size: 16px;
+}
+
+/* 166px e a altura do player compacto do SoundCloud; mais baixo que isso
+   ele corta a capa e os controles. */
+.set-player {
+  display: block;
+  width: 100%;
+  height: 166px;
+  border: 0;
+}
+
+.sets-hint {
+  margin-top: 24px;
+  font-family: "Junicode";
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.65;
+}
+/* Studio ------------------------------------------------------------ */
+
+.studio-figure {
+  margin: 0 0 24px;
+}
+
+.studio-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+/* Enquanto nao existe foto (studio.photo vazio em studio.js) */
+.studio-photo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 24px;
+  background-color: #989360;
+  font-family: "Junicode";
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.studio-caption {
+  margin-top: 8px;
+  font-family: "Junicode";
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.65;
+}
+
+.studio-intro {
+  max-width: 60ch;
+  margin: 0 auto 28px;
+  font-family: "Junicode";
+  font-size: 16px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Cada equipamento e um par dt/dd: nome em cima, nota embaixo. */
+.studio-gear {
+  border-radius: 5px;
+  background-color: #989360;
+  padding: 24px 32px;
+}
+
+.studio-gear dt {
+  font-family: "Junicode Bold Italic";
+  font-style: italic;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.studio-gear dt + dd {
+  margin: 4px 0 0;
+}
+
+.studio-gear dd {
+  font-family: "Junicode";
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+/* Separa um equipamento do proximo sem precisar de borda em cada um. */
+.studio-gear dd + dt {
+  margin-top: 18px;
+}
+
+
 
 /* landing page  */
 

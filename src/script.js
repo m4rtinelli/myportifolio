@@ -11,6 +11,10 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/Addons.js";
 import { CopyShader } from "three/examples/jsm/Addons.js";
 import { PlayHandler } from "./modules/audioPlayer.js";
+import { SetsShelf } from "./modules/setsModal.js";
+import { AlbumShelf } from "./modules/albumsModal.js";
+import { StudioPanel } from "./modules/studioModal.js";
+import { ProximityZones } from "./modules/proximity.js";
 
 import Stats from "stats.js";
 
@@ -64,12 +68,45 @@ const getQualitySettings = () => {
  */
 
 let player = null; // PositionalAudio, criado quando o modelo carrega
+let playHandler = null; // controla o player da cena; guardado para o modal de sets
+
+/*
+ * Os mixes e a musica da cena disputariam o mesmo ouvido, entao um set que
+ * comeca a tocar assume a barra de player: o nome passa a ser o do mix e o
+ * botao de play/pause passa a comandar o widget. Quando o set acaba, o
+ * comando volta para a faixa da cena, parada.
+ *
+ * As linhas ja existem no DOM; os iframes so viram rede na primeira vez que
+ * o modal abre.
+ */
+/* As capas so baixam quando o modal abre pela primeira vez. */
+const albumShelf = new AlbumShelf();
+
+const studioPanel = new StudioPanel(document.getElementById("studioContent"));
+
+
+const setsShelf = new SetsShelf(document.getElementById("setsList"), {
+  onPlay: (source) => playHandler?.attachExternal(source),
+  onPause: () => playHandler?.updateExternal(false),
+  onFinish: () => playHandler?.detachExternal(),
+});
 
 
 // Raycasting variables for HTML Elements interaction
 let foundIntersectionPrateleira = false;
 let foundIntersectionVinil = false;
-const closeModal = document.querySelector(".close");
+
+/*
+ * A interacao ativa no frame, seja ela do raycast ou da proximidade. O
+ * keydown do F le daqui em vez de repetir a cadeia de ifs do tick.
+ */
+let activeInteraction = null;
+
+/* Hasteados para nao criar objeto novo a cada frame no loop de render. */
+const RAY_INTERACTIONS = {
+  prateleira: { modal: "musicModal", prompt: "Press F to hear my music" },
+  vinil: { modal: "setsModal", prompt: "Press F to hear my sets" },
+};
 
 // Stats FPS COUNTER
 var stats = new Stats();
@@ -195,6 +232,33 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(1, 1.8, 1);
 camera.lookAt(3, 1.8, 3);
 scene.add(camera);
+
+/*
+ * Zona de proximidade da bancada de equipamentos.
+ *
+ * Convive de proposito com o raycast das outras duas zonas: da para andar
+ * pela sala e comparar as duas formas de gatilho na mesma sessao antes de
+ * decidir migrar o resto. Os nomes sao os meshes do .glb; a ancora sai da
+ * caixa que envolve eles, entao nao ha coordenada fixa aqui.
+ */
+const proximityZones = new ProximityZones(camera, [
+  {
+    id: "studio",
+    objects: [
+      "electribe_rosa",
+      "electribe_azul",
+      "303",
+      "acidlab",
+      "MPC",
+      "VIRUS",
+      "dx7",
+    ],
+    radius: 2.5, // em unidades de mundo; o raycast antigo usava far = 2
+    facing: 0.35, // produto escalar minimo: ~70 graus para cada lado
+    modal: "studioModal",
+    prompt: "Press F to see my studio",
+  },
+]);
 
 // **
 //  AUDIO LISTENER
@@ -326,7 +390,24 @@ document.getElementById("enterButton").addEventListener("click", () => {
           },
         ];
 
-        new PlayHandler(player, playlist, 0.4); // volume padrão = 0.4
+        playHandler = new PlayHandler(player, playlist, 0.4); // volume padrão = 0.4
+
+        // Mesh renomeado no Blender vira uma zona que nunca dispara, e em
+        // silencio o sintoma seria so "o F nao funciona ali".
+        proximityZones.bind(gltf.scene).forEach(({ id, found, missing }) => {
+          if (missing.length) {
+            console.warn(`[proximity] zona "${id}": nao achei ${missing.join(", ")}`);
+          } else {
+            console.info(`[proximity] zona "${id}": ${found} meshes`);
+          }
+        });
+
+        // Calibragem ao vivo: da para andar ate a bancada e ajustar o
+        // gatilho vendo o resultado, em vez de chutar numero e recarregar.
+        const studioZone = proximityZones.zones[0];
+        const proximityFolder = gui.addFolder("Proximity (studio)");
+        proximityFolder.add(studioZone, "radius", 0.5, 8, 0.1).name("raio");
+        proximityFolder.add(studioZone, "facing", -1, 1, 0.05).name("cone (1 = de frente)");
 
         // Só ligar depois de orientar a câmera: o setter `enabled` guarda
         // o euler atual, então ligar antes congelaria a rotação antiga.
@@ -415,12 +496,20 @@ const tick = () => {
     }
   });
 
-  if (foundIntersectionPrateleira) {
+  /*
+   * A proximidade ganha do raycast quando as duas valem: chegar perto e um
+   * gesto deliberado, enquanto a mira pode so estar de passagem.
+   */
+  const zone = proximityZones.update();
+
+  if (zone) activeInteraction = zone;
+  else if (foundIntersectionPrateleira) activeInteraction = RAY_INTERACTIONS.prateleira;
+  else if (foundIntersectionVinil) activeInteraction = RAY_INTERACTIONS.vinil;
+  else activeInteraction = null;
+
+  if (activeInteraction) {
     interactionPrompt.classList.add("active");
-    interactionPrompt.innerHTML = "Press F to hear my music";
-  } else if (foundIntersectionVinil) {
-    interactionPrompt.classList.add("active");
-    interactionPrompt.innerHTML = "Press F to hear my sets";
+    interactionPrompt.textContent = activeInteraction.prompt;
   } else {
     interactionPrompt.classList.remove("active");
   }
@@ -438,13 +527,7 @@ tick();
 
 // check which obj is intersecting and display modals based on IDs
 document.addEventListener("keydown", (event) => {
-  if (event.code === "KeyF") {
-    if (foundIntersectionPrateleira) {
-      showModal("musicModal");
-    } else if (foundIntersectionVinil) {
-      showModal("setsModal");
-    }
-  }
+  if (event.code === "KeyF" && activeInteraction) showModal(activeInteraction.modal);
 });
 
 // *
@@ -452,10 +535,14 @@ document.addEventListener("keydown", (event) => {
 // Modal control functions
 function showModal(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add("modal-active");
-    fpControls.enabled = false;
-  }
+  if (!modal) return;
+
+  modal.classList.add("modal-active");
+  fpControls.enabled = false;
+
+  if (modalId === "musicModal") albumShelf.open();
+  if (modalId === "studioModal") studioPanel.open();
+  if (modalId === "setsModal") setsShelf.open();
 }
 
 function hideModal(modalId) {
