@@ -15,6 +15,8 @@ import { SetsShelf } from "./modules/setsModal.js";
 import { AlbumShelf } from "./modules/albumsModal.js";
 import { StudioPanel } from "./modules/studioModal.js";
 import { ProximityZones } from "./modules/proximity.js";
+import { SecretRoom } from "./modules/secretRoom.js";
+import { WorldManager } from "./modules/worlds.js";
 
 import Stats from "stats.js";
 
@@ -241,6 +243,15 @@ scene.add(camera);
  * decidir migrar o resto. Os nomes sao os meshes do .glb; a ancora sai da
  * caixa que envolve eles, entao nao ha coordenada fixa aqui.
  */
+/*
+ * A galeria. Montada em codigo (ver secretRoom.js) e pendurada na mesma
+ * cena do quarto, escondida ate alguem entrar. As obras saem do
+ * motiondesign/projects.js, entao publicar um trabalho novo la pendura ele
+ * aqui tambem.
+ */
+const secretRoom = new SecretRoom({ size: 20, height: 5 });
+scene.add(secretRoom.group);
+
 const proximityZones = new ProximityZones(camera, [
   {
     id: "studio",
@@ -253,10 +264,32 @@ const proximityZones = new ProximityZones(camera, [
       "VIRUS",
       "dx7",
     ],
-    radius: 2.5, // em unidades de mundo; o raycast antigo usava far = 2
+    radius: 1.3, // em unidades de mundo; o raycast antigo usava far = 2
     facing: 0.35, // produto escalar minimo: ~70 graus para cada lado
+    world: "main",
     modal: "studioModal",
     prompt: "Press F to see my studio",
+  },
+  {
+    /* Cube028_1 e a tela do computador — a mesma que recebe o video. */
+    id: "computer",
+    objects: ["Cube028_1"],
+    radius: 1.3,
+    facing: 0.35,
+    world: "main",
+    action: () => worldManager.enter("secret"),
+    prompt: "Press F to enter secret room",
+  },
+  {
+    /* A porta so existe depois que a galeria e montada, e ela nasce junto
+       com o modulo, entao o nome ja esta la quando o bind roda. */
+    id: "gallery-exit",
+    objects: ["secret_exit"],
+    radius: 2.2,
+    facing: 0.2, // mais permissivo: e a saida, nao pode virar armadilha
+    world: "secret",
+    action: () => worldManager.enter("main"),
+    prompt: "Press F to go back",
   },
 ]);
 
@@ -280,6 +313,10 @@ orbit.enabled = false;
 const fpControls = new FirstPersonCameraControl(camera, canvas);
 fpControls.enabled = false;
 
+/* Depois do fpControls: o gerenciador troca os colliders dele na troca
+   de sala, entao precisa do controle ja construido. */
+const worldManager = new WorldManager({ scene, camera, controls: fpControls });
+
 /**
  * Models
  */
@@ -290,6 +327,24 @@ const gltfLoader = new GLTFLoader(loadingManager);
 gltfLoader.setDRACOLoader(dracoLoader);
 
 let sceneInitialized = false;
+
+/*
+ * Tela do monitor com a logo da Outermost (mesh "Cube028_1", material
+ * "MAIN SCREEN" no .glb). A logo fica no Emission, nao no Base Color, entao
+ * o video tem que entrar como emissiveMap - trocar o `.map` deixaria a tela
+ * preta, ja que o Base Color desse material nao tem textura nenhuma.
+ */
+const mainScreenVideo = document.createElement("video");
+mainScreenVideo.src = "../videos/OMR MOTION 2 (BW).mp4";
+mainScreenVideo.loop = true;
+mainScreenVideo.muted = true;
+mainScreenVideo.playsInline = true;
+
+const mainScreenTexture = new THREE.VideoTexture(mainScreenVideo);
+mainScreenTexture.colorSpace = THREE.SRGBColorSpace;
+// GLTFLoader importa texturas com flipY = false; VideoTexture nasce com
+// flipY = true, entao sem isso a logo aparece de cabeca para baixo.
+mainScreenTexture.flipY = false;
 
 // ENTER BUTTON CLICK HANDLER
 let renderer;
@@ -364,13 +419,48 @@ document.getElementById("enterButton").addEventListener("click", () => {
         gltf.scene.scale.set(0.3, 0.3, 0.3);
         gltf.scene.position.set(0, 0, 0);
         scene.add(gltf.scene);
-        fpControls.colliders = gltf.scene.children[0];
 
-        // Spawn na altura dos olhos, olhando reto para frente.
-        // O alvo do lookAt usa o mesmo Y da câmera, então não há
-        // inclinação vertical nenhuma no início.
-        camera.position.set(1, 1.8, 1);
-        camera.lookAt(3, camera.position.y, 3);
+        const mainScreen = gltf.scene.getObjectByName("Cube028_1");
+        if (mainScreen && mainScreen.material) {
+          mainScreen.material.emissiveMap = mainScreenTexture;
+          mainScreen.material.needsUpdate = true;
+          mainScreenVideo.play().catch(() => {});
+        } else {
+          console.warn('[main screen] mesh "Cube028_1" nao encontrado no .glb');
+        }
+
+        /*
+         * Os dois mundos. O quarto guarda o envmap para poder devolver ao
+         * voltar da galeria; a galeria troca por um fundo liso, que e o que
+         * mais faz a sala parecer outro lugar.
+         *
+         * Spawn na altura dos olhos, olhando reto para frente: o alvo do
+         * lookAt usa o mesmo Y da camera, entao nao ha inclinacao nenhuma.
+         */
+        worldManager.register("main", {
+          root: gltf.scene,
+          colliders: gltf.scene.children[0],
+          spawn: new THREE.Vector3(1, 1.8, 1),
+          lookAt: new THREE.Vector3(3, 1.8, 3),
+          background: environmentMap,
+          environment: environmentMap,
+          onEnter: () => {
+            proximityZones.world = "main";
+            secretRoom.sleep();
+          },
+        });
+
+        worldManager.register("secret", {
+          root: secretRoom.group,
+          colliders: secretRoom.shell,
+          spawn: secretRoom.spawn,
+          lookAt: secretRoom.spawnLookAt,
+          background: new THREE.Color(0x0d0d0d),
+          environment: null,
+          onEnter: () => {
+            proximityZones.world = "secret";
+          },
+        });
 
         // audio
         //
@@ -394,7 +484,11 @@ document.getElementById("enterButton").addEventListener("click", () => {
 
         // Mesh renomeado no Blender vira uma zona que nunca dispara, e em
         // silencio o sintoma seria so "o F nao funciona ali".
-        proximityZones.bind(gltf.scene).forEach(({ id, found, missing }) => {
+        // Um bind por mundo: zona que nao acha mesh neste root fica como
+        // esta, entao ligar a galeria nao apaga as zonas do quarto.
+        [gltf.scene, secretRoom.group].flatMap((root) =>
+          proximityZones.bind(root)
+        ).forEach(({ id, found, missing }) => {
           if (missing.length) {
             console.warn(`[proximity] zona "${id}": nao achei ${missing.join(", ")}`);
           } else {
@@ -402,16 +496,10 @@ document.getElementById("enterButton").addEventListener("click", () => {
           }
         });
 
-        // Calibragem ao vivo: da para andar ate a bancada e ajustar o
-        // gatilho vendo o resultado, em vez de chutar numero e recarregar.
-        const studioZone = proximityZones.zones[0];
-        const proximityFolder = gui.addFolder("Proximity (studio)");
-        proximityFolder.add(studioZone, "radius", 0.5, 8, 0.1).name("raio");
-        proximityFolder.add(studioZone, "facing", -1, 1, 0.05).name("cone (1 = de frente)");
-
-        // Só ligar depois de orientar a câmera: o setter `enabled` guarda
-        // o euler atual, então ligar antes congelaria a rotação antiga.
-        fpControls.enabled = true;
+        // Posiciona a camera, liga os colliders e so entao liga o controle
+        // — o setter `enabled` guarda o euler atual, e ligar antes de mover
+        // congelaria a rotacao antiga por cima da nova.
+        worldManager.enter("main", { resume: false });
       },
       (event) => setLoadProgress(event.loaded, event.total)
     );
@@ -500,11 +588,16 @@ const tick = () => {
    * A proximidade ganha do raycast quando as duas valem: chegar perto e um
    * gesto deliberado, enquanto a mira pode so estar de passagem.
    */
+  // Acende so os quadros perto de voce; sai da sala e tudo pausa.
+  secretRoom.update(camera.position);
+
   const zone = proximityZones.update();
 
+  const inMainRoom = worldManager.currentId === "main";
+
   if (zone) activeInteraction = zone;
-  else if (foundIntersectionPrateleira) activeInteraction = RAY_INTERACTIONS.prateleira;
-  else if (foundIntersectionVinil) activeInteraction = RAY_INTERACTIONS.vinil;
+  else if (inMainRoom && foundIntersectionPrateleira) activeInteraction = RAY_INTERACTIONS.prateleira;
+  else if (inMainRoom && foundIntersectionVinil) activeInteraction = RAY_INTERACTIONS.vinil;
   else activeInteraction = null;
 
   if (activeInteraction) {
@@ -527,7 +620,18 @@ tick();
 
 // check which obj is intersecting and display modals based on IDs
 document.addEventListener("keydown", (event) => {
-  if (event.code === "KeyF" && activeInteraction) showModal(activeInteraction.modal);
+  if (event.code === "KeyF" && activeInteraction) {
+    // Zona com `action` faz alguma coisa no mundo (trocar de sala); as
+    // outras continuam abrindo modal.
+    if (activeInteraction.action) activeInteraction.action();
+    else showModal(activeInteraction.modal);
+  }
+
+  /* Saida de emergencia: se a porta ficar fora de alcance por algum motivo,
+     o Esc sempre devolve o jogador para o quarto. */
+  if (event.code === "Escape" && worldManager.currentId === "secret") {
+    worldManager.enter("main");
+  }
 });
 
 // *

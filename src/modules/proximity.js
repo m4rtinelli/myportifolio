@@ -27,25 +27,38 @@ export class ProximityZones {
     this.camera = camera;
     this.zones = zones.map((zone) => ({ facing: 0.35, ...zone, anchor: null }));
 
+    /*
+     * Mundo ativo. Uma zona com `world` so vale quando bate com este campo,
+     * senao o gatilho do computador continuaria disparando dentro da galeria,
+     * onde aquele mesh nem esta visivel.
+     */
+    this.world = null;
+
     // Reaproveitados a cada frame para não alocar Vector3 no loop de render.
     this._forward = new THREE.Vector3();
     this._toZone = new THREE.Vector3();
   }
 
   /**
-   * Liga as zonas ao modelo carregado. Precisa rodar depois de o glTF entrar
-   * na cena e receber escala/posição, senão a caixa sai no lugar errado.
+   * Liga as zonas a um mundo já montado. Precisa rodar depois de o objeto
+   * entrar na cena e receber escala/posição, senão a caixa sai no lugar
+   * errado.
+   *
+   * Pode ser chamado uma vez por mundo: zona que não acha nenhum mesh neste
+   * root fica intocada, com a âncora que já tinha. Sem isso, ligar a galeria
+   * apagaria as zonas do quarto, que foram ligadas contra o .glb.
    *
    * @returns {Array<{id: string, found: number, missing: string[]}>} um
-   *   relatório por zona — nome errado no Blender vira uma zona que nunca
-   *   dispara, e em silêncio isso é difícil de perceber.
+   *   relatório só das zonas que este root resolveu — nome errado no Blender
+   *   vira uma zona que nunca dispara, e em silêncio isso é difícil de ver.
    */
   bind(root) {
     root.updateMatrixWorld(true);
 
     const box = new THREE.Box3();
+    const report = [];
 
-    return this.zones.map((zone) => {
+    this.zones.forEach((zone) => {
       box.makeEmpty();
       const missing = [];
 
@@ -55,10 +68,18 @@ export class ProximityZones {
         else missing.push(name);
       });
 
-      zone.anchor = box.isEmpty() ? null : box.getCenter(new THREE.Vector3());
+      // Nada deste root: a zona é de outro mundo, deixa como está.
+      if (box.isEmpty()) return;
 
-      return { id: zone.id, found: zone.objects.length - missing.length, missing };
+      zone.anchor = box.getCenter(new THREE.Vector3());
+      report.push({
+        id: zone.id,
+        found: zone.objects.length - missing.length,
+        missing,
+      });
     });
+
+    return report;
   }
 
   /**
@@ -73,6 +94,7 @@ export class ProximityZones {
 
     for (const zone of this.zones) {
       if (!zone.anchor) continue;
+      if (zone.world && zone.world !== this.world) continue;
 
       const distance = this.camera.position.distanceTo(zone.anchor);
       if (distance > zone.radius || distance >= bestDistance) continue;
