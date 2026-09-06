@@ -17,13 +17,34 @@ export const studio = {
   photo: "",
   photoCaption: "",
 
-  // TODO: reescrever com a sua voz — isto é só um rascunho a partir do doc.
-  intro:
-    "Almost everything I release starts on hardware: drum machines and a 303 " +
-    "clone tracked live as jams, then arranged and processed afterwards. " +
-    "These are the machines that keep coming back.",
+  /*
+   * TODO: escreva aqui o texto sobre o estúdio. Enquanto estiver vazio a
+   * coluna da direita começa direto na lista, sem buraco nem placeholder.
+   *
+   * Para separar em parágrafos, troque por um array de strings — o
+   * studioModal.js aceita os dois formatos.
+   */
+  intro: "",
 
+  /*
+   * O que é meu, na ordem que você passou. As notas dizem em quais discos
+   * cada máquina aparece e saíram do seu doc de releases — não invente aqui,
+   * é o tipo de detalhe que alguém confere. Item sem nota some a linha de
+   * baixo sozinho, então é só apagar o campo se quiser a lista limpa.
+   */
   equipment: [
+    {
+      name: "Access Virus B",
+      note: "Plano Z, Ferramentas Vol. I, Ducentésimo Dia, Ai Que Raiva, UD004 and Kengaral.",
+    },
+    {
+      name: "Akai MPC Live",
+      note: "Sampling and sequencing. On Dixava and Ducentésimo Dia.",
+    },
+    {
+      name: "Behringer Pro-1",
+      note: "",
+    },
     {
       name: "Korg Electribe EMX-1",
       note: "Valve-driven groovebox. On Sem Sono, Plano Z and Dixava.",
@@ -45,48 +66,22 @@ export const studio = {
       note: "FM synthesis, mostly for pads and bells. On Sem Sono and Plano Z.",
     },
     {
-      name: "Access Virus B",
-      note: "Virtual analog workhorse — Plano Z, Ferramentas Vol. I, Ducentésimo Dia, Ai Que Raiva, UD004 and Kengaral.",
+      name: "Universal Audio Apollo",
+      note: "Rack interface — everything gets tracked through it.",
     },
     {
-      name: "Akai MPC Live",
-      note: "Sampling and sequencing. On Dixava and Ducentésimo Dia.",
-    },
-    {
-      name: "Roland TR-909",
-      note: "On Ducentésimo Dia, UD004 and Spiral Signals.",
-    },
-    {
-      name: "Roland TR-808",
-      note: "Often distorted through the RAT. On Dixava, Ai Que Raiva, Kengaral and Black Earth.",
-    },
-    {
-      name: "Roland Juno-106",
-      note: "On Dixava, Ferramentas Vol. I and Spiral Signals.",
-    },
-    {
-      name: "Roland TR-707",
-      note: "On Dixava.",
-    },
-    {
-      name: "Korg MS-20",
-      note: "On Dixava.",
-    },
-    {
-      name: "Make Noise 0-Coast",
-      note: "Semi-modular, used for texture. On Dixava.",
-    },
-    {
-      name: "Eventide H9",
-      note: "Effects processing. On Dixava.",
-    },
-    {
-      name: "Empirical Labs Distressor",
-      note: "Compression on the way in. On Dixava.",
+      // TODO: a Behringer chama esse clone de MS-101 (nao pode usar o nome
+      // SH-101). Troque para "Behringer SH-101" se preferir como voce fala.
+      name: "Behringer MS-101",
+      note: "SH-101 clone.",
     },
     {
       name: "ProCo RAT",
       note: "Distortion pedal the 808 gets recorded through. On Plano Z and Snitchin' Bitches.",
     },
   ],
+
+  /* Vai depois da lista, em texto menor. Vazio, a linha nao aparece. */
+  equipmentFootnote:
+    "Anything else you hear on these records was borrowed from friends.",
 };

@@ -347,8 +347,25 @@ p {
 }
 /* Studio ------------------------------------------------------------ */
 
+/*
+ * Foto a esquerda, texto e lista a direita. A foto e sticky: a coluna da
+ * direita e mais alta que a esquerda, entao sem isso a imagem sumiria assim
+ * que alguem rolasse a lista de equipamentos.
+ */
+.studio-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.studio-media {
+  position: sticky;
+  top: 0;
+}
+
 .studio-figure {
-  margin: 0 0 24px;
+  margin: 0;
 }
 
 .studio-photo {
@@ -363,11 +380,10 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 16 / 9;
-  margin-bottom: 24px;
+  aspect-ratio: 4 / 5;
   background-color: #989360;
   font-family: "Junicode";
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   opacity: 0.55;
@@ -377,50 +393,86 @@ p {
   margin-top: 8px;
   font-family: "Junicode";
   font-size: 13px;
-  text-align: center;
   opacity: 0.65;
 }
 
 .studio-intro {
-  max-width: 60ch;
-  margin: 0 auto 28px;
+  margin: 0 0 14px;
   font-family: "Junicode";
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.6;
-  text-align: center;
 }
 
-/* Cada equipamento e um par dt/dd: nome em cima, nota embaixo. */
-.studio-gear {
+.studio-gear-block {
   border-radius: 5px;
   background-color: #989360;
-  padding: 24px 32px;
+  padding: 20px 24px;
 }
 
-.studio-gear dt {
+.studio-gear-title {
+  margin: 0 0 14px;
+  font-family: "Junicode";
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.studio-gear {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio-gear li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.studio-gear li + li {
+  margin-top: 14px;
+}
+
+.studio-gear-name {
   font-family: "Junicode Bold Italic";
   font-style: italic;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 15px;
 }
 
-.studio-gear dt + dd {
-  margin: 4px 0 0;
-}
-
-.studio-gear dd {
+.studio-gear-note {
   font-family: "Junicode";
-  font-size: 14px;
-  line-height: 1.5;
-  opacity: 0.75;
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.7;
 }
 
-/* Separa um equipamento do proximo sem precisar de borda em cada um. */
-.studio-gear dd + dt {
-  margin-top: 18px;
+/* Separada da lista por uma linha, para nao ser lida como mais um item. */
+.studio-gear-footnote {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.18);
+  font-family: "Junicode";
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.7;
 }
 
+/* Numa coluna so: a foto para de ser sticky, senao ela cola no topo e o
+   texto passa por tras dela. */
+@media (max-width: 700px) {
+  .studio-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
 
+  .studio-media {
+    position: static;
+  }
+}
 
 /* landing page  */
 

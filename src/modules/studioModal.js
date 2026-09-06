@@ -3,6 +3,10 @@ import { studio } from "./studio.js";
 /**
  * Monta o modal do estúdio a partir de studio.js.
  *
+ * Layout em duas colunas: foto à esquerda, texto e lista de equipamentos à
+ * direita. Em tela estreita as duas viram uma coluna só (ver motionpage do
+ * style.css: .studio-layout).
+ *
  * Mesma regra dos outros modais: a foto fica em data-src e só vira rede na
  * primeira abertura, para não disputar banda com o .glb durante o load.
  */
@@ -14,16 +18,26 @@ export class StudioPanel {
 
     if (!this.$container) return;
 
-    this.$container.append(this._buildPhoto(), this._buildText());
+    const layout = document.createElement("div");
+    layout.className = "studio-layout";
+    layout.append(this._buildMedia(), this._buildBody());
+
+    this.$container.append(layout);
   }
 
-  _buildPhoto() {
+  /* ---------- coluna da esquerda ---------- */
+
+  _buildMedia() {
+    const column = document.createElement("div");
+    column.className = "studio-media";
+
     // Sem foto ainda: um bloco de espera, e não um <img src=""> quebrado.
     if (!studio.photo) {
       const placeholder = document.createElement("div");
       placeholder.className = "studio-photo studio-photo-empty";
       placeholder.textContent = "Photo coming soon";
-      return placeholder;
+      column.append(placeholder);
+      return column;
     }
 
     const figure = document.createElement("figure");
@@ -34,6 +48,7 @@ export class StudioPanel {
     photo.dataset.src = studio.photo;
     photo.loading = "lazy";
     photo.decoding = "async";
+    // Decorativa: a legenda e o texto ao lado já dizem o que é.
     photo.alt = "";
     this.$photo = photo;
 
@@ -46,36 +61,79 @@ export class StudioPanel {
       figure.append(caption);
     }
 
-    return figure;
+    column.append(figure);
+    return column;
   }
 
-  _buildText() {
-    const wrapper = document.createElement("div");
-    wrapper.className = "studio-body";
+  /* ---------- coluna da direita ---------- */
 
-    if (studio.intro) {
-      const intro = document.createElement("p");
-      intro.className = "studio-intro";
-      intro.textContent = studio.intro;
-      wrapper.append(intro);
-    }
+  _buildBody() {
+    const column = document.createElement("div");
+    column.className = "studio-body";
 
-    const list = document.createElement("dl");
+    this._buildIntro().forEach((paragraph) => column.append(paragraph));
+    column.append(this._buildGear());
+
+    return column;
+  }
+
+  /* Aceita string ou array de strings, para o texto poder virar vários
+     parágrafos sem precisar mexer aqui depois. */
+  _buildIntro() {
+    const source = Array.isArray(studio.intro) ? studio.intro : [studio.intro];
+
+    return source
+      .filter((text) => text && text.trim())
+      .map((text) => {
+        const paragraph = document.createElement("p");
+        paragraph.className = "studio-intro";
+        paragraph.textContent = text;
+        return paragraph;
+      });
+  }
+
+  _buildGear() {
+    const section = document.createElement("div");
+    section.className = "studio-gear-block";
+
+    const heading = document.createElement("h2");
+    heading.className = "studio-gear-title";
+    heading.textContent = "Equipment";
+    section.append(heading);
+
+    const list = document.createElement("ul");
     list.className = "studio-gear";
 
     studio.equipment.forEach(({ name, note }) => {
-      const term = document.createElement("dt");
-      term.textContent = name;
-      list.append(term);
+      const item = document.createElement("li");
 
-      if (!note) return;
-      const detail = document.createElement("dd");
-      detail.textContent = note;
-      list.append(detail);
+      const label = document.createElement("span");
+      label.className = "studio-gear-name";
+      label.textContent = name;
+      item.append(label);
+
+      // A nota é opcional: sem ela o item fica só com o nome.
+      if (note) {
+        const detail = document.createElement("span");
+        detail.className = "studio-gear-note";
+        detail.textContent = note;
+        item.append(detail);
+      }
+
+      list.append(item);
     });
 
-    wrapper.append(list);
-    return wrapper;
+    section.append(list);
+
+    // Nota de rodape da lista (ex. o que foi emprestado).
+    if (studio.equipmentFootnote) {
+      const footnote = document.createElement("p");
+      footnote.className = "studio-gear-footnote";
+      footnote.textContent = studio.equipmentFootnote;
+      section.append(footnote);
+    }
+
+    return section;
   }
 
   open() {
