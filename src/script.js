@@ -6,7 +6,7 @@ import GUI from "lil-gui";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { AudioLoader, AudioListener, PositionalAudio } from "three";
+import { PositionalAudio } from "three";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/Addons.js";
 import { CopyShader } from "three/examples/jsm/Addons.js";
@@ -63,34 +63,8 @@ const getQualitySettings = () => {
  * AUDIO PLAYER CONFIGURATION
  */
 
-let current = 0; // índice da faixa
-let player = null; // PositionalAudio
-const buffers = {}; // cache dos AudioBuffers
-let muted = false;
-const audioLoader = new AudioLoader();
+let player = null; // PositionalAudio, criado quando o modelo carrega
 
-function loadTrack(index) {
-  const { name, url } = playlist[index];
-
-  const play = (buffer) => {
-    if (player.isPlaying) player.stop();
-    player.setBuffer(buffer);
-    player.setLoop(true);
-    player.setVolume(muted ? 0 : 0.4);
-    player.play();
-    document.getElementById("trackName").textContent = name;
-  };
-
-  if (buffers[url]) {
-    play(buffers[url]); // buffer já em cache
-  } else {
-    audioLoader.load(url, (buf) => {
-      buffers[url] = buf; // guarda no cache
-      play(buf);
-    });
-  }
-}
-//
 
 // Raycasting variables for HTML Elements interaction
 let foundIntersectionPrateleira = false;
@@ -107,14 +81,50 @@ const cubeTextureLoader = new THREE.CubeTextureLoader();
 let loadedModel;
 
 // CSS LOADER
+const loaderTrack = document.querySelector(".loader-track");
+const loaderBar = document.getElementById("loaderBar");
+const loaderPercent = document.getElementById("loaderPercent");
+const loaderBytes = document.getElementById("loaderBytes");
+
+const toMB = (bytes) => (bytes / 1024 / 1024).toFixed(1);
+
+function setLoadProgress(loaded, total) {
+  // Sem Content-Length (resposta comprimida/chunked) não dá para calcular
+  // porcentagem: cai para a barra indeterminada e mostra só o que baixou.
+  if (!total) {
+    loaderTrack?.classList.add("is-indeterminate");
+    if (loaderBytes) loaderBytes.textContent = `${toMB(loaded)} MB`;
+    return;
+  }
+
+  loaderTrack?.classList.remove("is-indeterminate");
+  const pct = Math.min(100, Math.round((loaded / total) * 100));
+  if (loaderBar) loaderBar.style.width = `${pct}%`;
+  if (loaderPercent) loaderPercent.textContent = `${pct}%`;
+  if (loaderBytes) loaderBytes.textContent = `${toMB(loaded)} / ${toMB(total)} MB`;
+}
+
+// Tempo mínimo que o loader fica visível. Sem isso, um modelo em cache
+// some antes da barra sair do zero e a tela só pisca.
+const MIN_LOADER_MS = 1400;
+let loaderShownAt = 0;
+
 const loadingManager = new THREE.LoadingManager(() => {
   const loadingScreen = document.querySelector(".loading-screen");
-  loadingScreen.classList.add("fade-out");
+  setLoadProgress(1, 1); // trava em 100% mesmo sem Content-Length
 
-  // optional: remove loader from DOM via event listener
+  // remove o loader do DOM quando o fade terminar. O guard evita que o
+  // transitionend de um filho (a barra) borbulhe e remova o elemento errado.
   loadingScreen.addEventListener("transitionend", (event) => {
-    event.target.remove();
+    if (event.target === loadingScreen && event.propertyName === "opacity") {
+      loadingScreen.remove();
+    }
   });
+
+  const elapsed = performance.now() - loaderShownAt;
+  setTimeout(() => {
+    loadingScreen.classList.add("fade-out");
+  }, Math.max(0, MIN_LOADER_MS - elapsed));
 });
 
 // Debug
@@ -182,8 +192,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(1, 6, 1);
-camera.lookAt(3, 1.5, 3);
+camera.position.set(1, 1.8, 1);
+camera.lookAt(3, 1.8, 3);
 scene.add(camera);
 
 // **
@@ -229,6 +239,7 @@ document.getElementById("enterButton").addEventListener("click", () => {
   const loadingScreen = document.querySelector(".loading-screen");
   loadingScreen.style.display = "flex";
   loadingScreen.classList.remove("fade-out");
+  loaderShownAt = performance.now();
 
   /**
    * Renderer
@@ -283,46 +294,46 @@ document.getElementById("enterButton").addEventListener("click", () => {
 
     // Start loading the model
 
-    gltfLoader.load("../ROOM OMR NEW.glb", (gltf) => {
-      gltf.scene.scale.set(0.3, 0.3, 0.3);
-      gltf.scene.position.set(0, 0, 0);
-      scene.add(gltf.scene);
-      fpControls.colliders = gltf.scene.children[0];
-      camera.lookAt(3, 1.5, 3);
+    gltfLoader.load(
+      "../ROOM OMR NEW.glb",
+      (gltf) => {
+        gltf.scene.scale.set(0.3, 0.3, 0.3);
+        gltf.scene.position.set(0, 0, 0);
+        scene.add(gltf.scene);
+        fpControls.colliders = gltf.scene.children[0];
 
-      // audio
-      //
-      // ***************************************************************
+        // Spawn na altura dos olhos, olhando reto para frente.
+        // O alvo do lookAt usa o mesmo Y da câmera, então não há
+        // inclinação vertical nenhuma no início.
+        camera.position.set(1, 1.8, 1);
+        camera.lookAt(3, camera.position.y, 3);
 
-      player = new PositionalAudio(listener);
-      player.setRefDistance(2); // volume 100 % até 2 unid.
-      player.setRolloffFactor(1); // curva padrão de queda
+        // audio
+        //
+        // ***************************************************************
 
-      const alvo = gltf.scene.getObjectByName("vinilera") || gltf.scene;
-      alvo.add(player);
+        player = new PositionalAudio(listener);
+        player.setRefDistance(2); // volume 100 % até 2 unid.
+        player.setRolloffFactor(1); // curva padrão de queda
 
-      const playlist = [
-        {
-          name: "Martinelli - translateX (Unreleased)",
-          url: "../music/Martinelli - translateX (mp3).mp3",
-        },
-        {
-          name: "translateY",
-          url: "../music/Martinelli - translateX (mp3).mp3",
-        },
-        {
-          name: "translateZ",
-          url: "../music/Martinelli - translateZ (mp3).mp3",
-        },
-      ];
+        const alvo = gltf.scene.getObjectByName("vinilera") || gltf.scene;
+        alvo.add(player);
 
-      new PlayHandler(player, playlist, 0.4); // volume padrão = 1
+        const playlist = [
+          {
+            name: "Martinelli - translateX (Unreleased)",
+            url: "../music/Martinelli - translateX (mp3).mp3",
+          },
+        ];
 
-      /* 3. toca a primeira faixa da playlist */
-      loadTrack(current);
-    });
+        new PlayHandler(player, playlist, 0.4); // volume padrão = 0.4
 
-    fpControls.enabled = true;
+        // Só ligar depois de orientar a câmera: o setter `enabled` guarda
+        // o euler atual, então ligar antes congelaria a rotação antiga.
+        fpControls.enabled = true;
+      },
+      (event) => setLoadProgress(event.loaded, event.total)
+    );
   }
 });
 

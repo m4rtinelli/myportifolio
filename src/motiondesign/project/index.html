@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project — Motion Design</title>
+  <link rel="icon" href="../../favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../../styles/motionpage.css">
+</head>
+
+<body>
+
+  <div class="gallery-motion">
+
+    <header id="header-motion">
+      <p class="header-title" id="projectBreadcrumb">Motion Design</p>
+      <a href="../">Back</a>
+    </header>
+
+    <!-- Preenchido por project.js a partir do ?id= da URL -->
+    <main class="project" id="project" hidden>
+      <div class="project-head">
+        <h1 class="project-title" id="projectTitle"></h1>
+        <dl class="project-meta" id="projectMeta"></dl>
+      </div>
+
+      <p class="project-description" id="projectDescription" hidden></p>
+
+      <div class="project-videos" id="projectVideos"></div>
+
+      <nav class="project-nav" id="projectNav" aria-label="Other projects"></nav>
+    </main>
+
+    <!-- Estado para ?id= ausente ou desconhecido -->
+    <main class="project project-missing" id="projectMissing" hidden>
+      <h1 class="project-title">Project not found</h1>
+      <p class="project-description">That project doesn’t exist — it may have been renamed.</p>
+      <p><a class="project-back" href="../">See all motion design work</a></p>
+    </main>
+
+  </div>
+
+  <footer class="footer-motion">
+    <a href="mailto:contact@hmartinelli.com">contact@hmartinelli.com</a>
+  </footer>
+
+  <script type="module" src="./project.js"></script>
+</body>
+
+</html>

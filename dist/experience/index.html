@@ -9,43 +9,37 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/experience-sU1N5-y-.js"></script>
+  <script type="module" crossorigin src="/assets/experience-BBEGc3Jr.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/assets/three.module-B-L2jF25.js">
-  <link rel="stylesheet" crossorigin href="/assets/experience-DW0hf27_.css">
+  <link rel="stylesheet" crossorigin href="/assets/experience-RZuHitP4.css">
 </head>
 
 <body>
 
 
-    <!-- welome page -->
+    <!-- welcome page -->
     <div class="landing-page">
         <div class="content">
 
             <div class="landing-info">
-                <p>You are about to enter a gamified version of my music portfolio, everything was made with Blender and coded using Three.js. </p>
+                <p>You are about to enter a gamified version of my music portfolio, everything was made with Blender and coded using Three.js.</p>
                 <p>You can interact with objects in the scene using the 'F' key.</p>
-                <p class="second-p">To move around the room, use ‘WASD’ or the arrows on your keyboard.</p>
-                <p class="third-p">To look around, click and drag the mouse.</p>
+                <p>To move around the room, use ‘WASD’ or the arrows on your keyboard.</p>
+                <p>To look around, click and drag the mouse.</p>
             </div>
-
-
 
             <div class="quality-options">
                 <div class="quality-wrapper">
-                    <span>please select your desired resolution:</span>
+                    <span class="quality-label">please select your desired resolution:</span>
                     <div class="buttons-container">
-                        <span class="quality-btn" data-quality="low">low</span>
-                        <span class="quality-btn" data-quality="high">high</span>
+                        <button type="button" class="quality-btn" data-quality="low">low</button>
+                        <button type="button" class="quality-btn selected" data-quality="high">high</button>
                     </div>
-                    <span id="enterButton">ENTER</span>
                 </div>
 
-
-
+                <button type="button" id="enterButton">ENTER</button>
             </div>
-
-
 
         </div>
     </div>
@@ -193,18 +187,33 @@
 
     <!--  AUDIO PLAYER -->
     <div class="player-controls">
-        <button id="prevTrack">⏮</button>
+        <button id="prevTrack" type="button" aria-label="Previous track">⏮</button>
+        <button id="playToggle" type="button" aria-label="Play">▶</button>
+        <button id="nextTrack" type="button" aria-label="Next track">⏭</button>
+
         <span id="trackName">– waiting –</span>
-        <button id="nextTrack">⏭</button>
 
         <!-- botão de mute / un‑mute -->
-        <button id="muteToggle" aria-pressed="false" title="Mute / Unmute">🔊</button>
+        <button id="muteToggle" type="button" aria-pressed="false" aria-label="Mute" title="Mute / Unmute (M)">🔊</button>
     </div>
 
 
     <!-- Website Loader -->
     <section class="loading-screen">
-        <div class="loader"></div>
+        <div class="loader">
+            <div class="loader-row">
+                <span>Loading scene</span>
+                <span id="loaderPercent">0%</span>
+            </div>
+
+            <div class="loader-track">
+                <div class="loader-bar" id="loaderBar"></div>
+            </div>
+
+            <div class="loader-row loader-row-sub">
+                <span id="loaderBytes">—</span>
+            </div>
+        </div>
     </section>
 
     <!-- interact with different objects manipulated in JS -->

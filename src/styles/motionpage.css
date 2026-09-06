@@ -2,189 +2,324 @@
 @import url("../fonts.css");
 @import url("https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap");
 
+:root {
+  /* Borda dos containers. Suba a opacidade para 1 se quiser branco puro. */
+  --line: rgba(255, 255, 255, 0.28);
+  --line-strong: #fff;
+  --ink: #fff;
+  --ink-muted: rgba(255, 255, 255, 0.55);
+}
+
 body {
   overflow-x: hidden;
   background-color: black;
+  color: var(--ink);
   font-family: "Host Grotesk";
 }
 
-.nv {
-  visibility: hidden;
-}
+/* ---------- cabeçalho ---------- */
 
 header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 header a {
-  color: white;
+  color: var(--ink);
   font-family: "Host Grotesk";
   font-size: 1.2rem;
+  text-decoration: none;
+}
+
+header a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 #header-motion {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   background-color: black;
-  padding: 2rem;
+  border-bottom: 1px solid var(--line);
+  padding: 1.5rem 2rem;
 }
 
-.header-motion-container {
-  max-width: max-content;
-  color: white;
-  display: flex;
-  gap: 250px;
-  font-family: "Host Grotesk";
+.header-title {
   font-size: 1.2rem;
 }
 
-.header-motion-container li {
-  cursor: pointer;
-}
-
-.header-motion-container li a {
-  text-decoration: none;
-  color: white;
-}
+/* ---------- grade ---------- */
 
 .gallery-motion {
   background-color: black;
   display: flex;
   flex-direction: column;
-  overflow: auto;
-  overflow-x: hidden;
 }
 
 .gallery-wrapper {
-  background-color: transparent;
-  color: white;
-  padding: 0px 30px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: center;
-  gap: 32px;
-  justify-content: center;
-  transform: scaleY(1);
-}
-
-.gallery-wrapper-others {
-  background-color: transparent;
-  color: white;
-  padding: 0px 30px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: center;
-  gap: 32px;
-  justify-content: center;
-  transform: scaleY(1);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+  list-style: none;
 }
 
 .gallery-item {
-  position: relative;
-  height: 100%;
-  max-height: 500px;
-  min-height: 100%;
   display: flex;
-  align-content: center;
-  justify-content: center;
+}
+
+.gallery-link {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+
+.gallery-link:hover,
+.gallery-link:focus-visible {
+  border-color: var(--line-strong);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.gallery-link:focus-visible {
+  outline: 1px solid var(--line-strong);
+  outline-offset: 3px;
 }
 
 .video-gallery {
-  max-width: 100%;
-  height: auto;
-  transition: all 0.5s cubic-bezier(0.34, 0.15, 0.18, 1);
-  overflow: hidden;
-}
-
-.hover-overlay {
-  position: absolute;
-  top: 0px;
+  display: block;
   width: 100%;
+  height: auto;
+  /* Placeholder até os metadados chegarem; o JS troca pela proporção real. */
+  aspect-ratio: 16 / 9;
+  background-color: #0a0a0a;
+  object-fit: contain;
+}
+
+/*
+ * O texto fica colado no rodapé do card (margin-top: auto), não logo abaixo
+ * da peça: como cada vídeo tem uma proporção, sem isso o título de cada card
+ * pararia numa altura diferente na mesma fileira.
+ *
+ * A linha divisória vem daqui, e não da borda inferior do vídeo, justamente
+ * por isso — presa ao vídeo ela ficaria boiando no meio do card, com o vazio
+ * embaixo. No topo do texto ela acompanha o alinhamento.
+ */
+.card-info {
   display: flex;
-  gap: 16px;
   flex-direction: column;
-  font-family: "Arial";
-  font-size: 22px;
-  color: white;
-  mix-blend-mode: difference;
-  transform: translateX(-100px);
-  opacity: 0;
-  transition: all 0.5s ease;
+  gap: 4px;
+  margin-top: auto;
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--line);
+  transition: border-color 0.25s ease;
 }
 
-.hover-overlay.animate {
-  opacity: 1;
-  transform: translateX(0);
+.gallery-link:hover .card-info,
+.gallery-link:focus-visible .card-info {
+  border-color: var(--line-strong);
 }
 
-.work-info {
-  mix-blend-mode: unset !important;
+.card-title {
+  font-size: 1rem;
+  font-weight: 500;
 }
 
-.header-selected {
-  text-decoration: underline;
+.card-meta {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
 }
+
+/* ---------- página do projeto ---------- */
+
+.project {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 3rem 2rem 0;
+}
+
+.project-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.project-title {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.project-meta {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  font-size: 0.85rem;
+}
+
+.project-meta dt {
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  align-self: center;
+}
+
+.project-description {
+  max-width: 60ch;
+  margin-top: 2rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+.project-videos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5rem;
+  margin-top: 4rem;
+}
+
+/*
+ * Vale para <video> e <img>: a largura acompanha a orientação do arquivo,
+ * que o project.js mede quando ele carrega e marca a classe. Sem isso, um
+ * vertical em coluna larga vira uma torre de mais de 1000px de altura.
+ */
+.project-video {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  max-height: 78vh;
+  /* Placeholder até os metadados chegarem; o JS troca pela proporção real. */
+  aspect-ratio: 16 / 9;
+  background-color: #0a0a0a;
+  object-fit: contain;
+  border: 1px solid var(--line);
+}
+
+.project-video.is-square {
+  max-width: 480px;
+}
+
+.project-video.is-portrait {
+  max-width: 360px;
+}
+
+/* Projetos sem arquivo ainda (media: [] em projects.js) */
+.video-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.project-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 3rem;
+}
+
+.project-nav-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  padding: 16px;
+  border: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+
+.project-nav-link:last-child {
+  text-align: right;
+}
+
+.project-nav-link:hover,
+.project-nav-link:focus-visible {
+  border-color: var(--line-strong);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.project-nav-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.project-nav-title {
+  font-size: 1rem;
+}
+
+.project-back {
+  color: var(--ink);
+}
+
+.project-missing {
+  padding-top: 5rem;
+}
+
+/* ---------- rodapé ---------- */
 
 .footer-motion {
   max-width: 100dvw;
   margin-top: 100px;
-  padding: 30px 30px;
-  border-top: 1px solid white;
+  padding: 30px;
+  border-top: 1px solid var(--line);
   display: flex;
   justify-content: end;
 }
 
 .footer-motion a {
-  color: white;
-  font-family: "Arial";
-  font-size: 22px;
+  color: var(--ink);
+  font-family: "Host Grotesk";
+  font-size: 1rem;
   text-decoration: none;
 }
 
-@keyframes growDown {
-  0% {
-    transform: scaleY(0);
-    opacity: 0;
+.footer-motion a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 700px) {
+  #header-motion,
+  .gallery-wrapper,
+  .project {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
   }
-  100% {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-}
 
-/* Classe que aplica a animação */
-.animate-grow {
-  animation: growDown 0.5s ease forwards;
-  transform-origin: top;
-}
-
-.hidden {
-  display: none;
-}
-
-@media (max-width: 1200px) {
-  .gallery-wrapper-others,
   .gallery-wrapper {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
+  }
+
+  .project-nav {
+    flex-direction: column;
+  }
+
+  .project-nav-link:last-child {
+    text-align: left;
   }
 }
-
-@media (max-width: 500px) {
-  .header-motion-container {
-    gap: 20px;
-    font-size: 18px;
-  }
-
-  .gallery-wrapper-others,
-  .gallery-wrapper {
-    grid-template-columns: repeat(1, 1fr);
-  }
-}
-
-/* @media (min-width: 768px) {
-  video::-webkit-media-controls {
-    display: none !important;
-  }
-  video::-webkit-media-controls-enclosure {
-    display: none !important;
-  }
-} */
